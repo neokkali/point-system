@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { useDeletePlayer } from "@/hooks/use-deletet-player";
 import { usePlayers } from "@/hooks/use-players";
 import api from "@/lib/axiosClient";
+import { useAuth } from "@/providers/auth-provider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import ClearRoomButton from "./clear-room-button";
 
@@ -27,6 +29,9 @@ interface RoomPageProps {
 }
 
 export default function Players({ roomId }: RoomPageProps) {
+  const { user, isAuthenticated } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
+
   const queryClient = useQueryClient();
   const { data: players, isLoading, error } = usePlayers(roomId);
 
@@ -127,14 +132,14 @@ export default function Players({ roomId }: RoomPageProps) {
               placeholder="اسم اللاعب"
               value={p.username}
               onChange={(e) => handleChange(idx, "username", e.target.value)}
-              className="flex-1"
+              className="flex-1 text-lg!"
             />
             <Input
               type="number"
               placeholder="النقاط"
               value={p.points}
               onChange={(e) => handleChange(idx, "points", e.target.value)}
-              className="w-24"
+              className="w-24 text-lg!"
             />
             <Button
               variant="destructive"
@@ -145,16 +150,35 @@ export default function Players({ roomId }: RoomPageProps) {
             </Button>
           </div>
         ))}
-        <div className="flex gap-2">
-          <Button onClick={addNewRow}>إضافة لاعب جديد</Button>
-          <Button
-            variant="secondary"
-            onClick={handleSave}
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? "جاري الحفظ..." : "حفظ التعديلات"}
-          </Button>
-          <ClearRoomButton roomId={roomId} />
+        <div className="flex flex-col gap-2 w-full">
+          <div className="flex flex-col items-center gap-4">
+            <Button
+              onClick={addNewRow}
+              className="w-full"
+              disabled={mutation.isPending}
+            >
+              إضافة لاعب جديد
+            </Button>
+            {mutation.isPending ? (
+              <Button
+                variant={"secondary"}
+                className="text-sm text-gray-500 w-full"
+                disabled={mutation.isPending}
+              >
+                جاري الحفظ
+                <Loader2 className="animate-spin" />
+              </Button>
+            ) : (
+              <Button
+                variant={"secondary"}
+                onClick={handleSave}
+                className="w-full"
+              >
+                حفظ التغييرات
+              </Button>
+            )}
+          </div>
+          {isAuthenticated && isAdmin && <ClearRoomButton roomId={roomId} />}
         </div>
       </CardContent>
     </Card>
