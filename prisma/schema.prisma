@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ----------------------------------------------------
+// 1. المستخدمين الأساسيين والمشرفين
+// ----------------------------------------------------
+enum Role {
+  ADMIN
+  MODERATOR
+  USER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// 2. الغرف وأنواعها
+// ----------------------------------------------------
+enum RoomType {
+  ARTICLE
+  QUIZ
+}
+
+model Room {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  type      RoomType
+  createdAt DateTime @default(now())
+  
+  // العلاقة: كل غرفة لديها سجلات نقاط متعددة
+  roomScores PlayerRoomScore[]
+}
+
+// ----------------------------------------------------
+// 3. اللاعب (الكيان الذي يجمع النقاط)
+// ----------------------------------------------------
+model Player {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  createdAt DateTime @default(now())
+
+  // العلاقة: كل لاعب لديه سجل نقاط لكل غرفة
+  roomScores PlayerRoomScore[]
+}
+
+// ----------------------------------------------------
+// 4. نموذج سجل النقاط لكل غرفة (الجدول التجميعي)
+// ----------------------------------------------------
+model PlayerRoomScore {
+  // المفاتيح المركبة: تضمن سجلاً واحداً لكل لاعب في كل غرفة
+  playerId String
+  roomId   String
+
+  // حقل النقاط: يتم تحديثه بشكل دوري باستخدام upsert
+  totalScore Int @default(0)
+
+  updatedAt DateTime @updatedAt // ختم زمني للتحديث
+
+  // العلاقات:
+  player Player @relation(fields: [playerId], references: [id])
+  room   Room   @relation(fields: [roomId], references: [id])
+
+  // 🔑 التعريف المفتاحي: المفتاح الأساسي مركب
+  @@id([playerId, roomId])
+  // فهرسة إضافية لتسريع لوحة الصدارة (Leaderboard) لكل غرفة
+  @@index([roomId, totalScore])
+}
