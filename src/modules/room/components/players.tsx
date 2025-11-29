@@ -3,10 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useClearRoom } from "@/hooks/use-clear-room";
+import { useDeletePlayer } from "@/hooks/use-deletet-player";
 import { usePlayers } from "@/hooks/use-players";
 import api from "@/lib/axiosClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import ClearRoomButton from "./clear-room-button";
 
 interface Player {
   id: string;
@@ -26,6 +29,7 @@ interface RoomPageProps {
 
 export default function Players({ roomId }: RoomPageProps) {
   const queryClient = useQueryClient();
+  const clearRoomMutation = useClearRoom(roomId);
   const { data: players, isLoading, error } = usePlayers(roomId);
 
   const [newPlayers, setNewPlayers] = useState<NewPlayer[]>([]);
@@ -74,6 +78,27 @@ export default function Players({ roomId }: RoomPageProps) {
     setNewPlayers((prev) => prev.filter((_, i) => i !== index));
   const handleSave = () => mutation.mutate(newPlayers);
 
+  const deleteMutation = useDeletePlayer(roomId);
+  function handleRemovePlayer(
+    player: { id?: string },
+    index: number,
+    removeRow: (idx: number) => void,
+    deleteMutation: ReturnType<typeof useDeletePlayer>
+  ) {
+    if (!player.id) {
+      // لو بدون ID → فقط احذفه من الواجهة
+      removeRow(index);
+      return;
+    }
+
+    // لو يوجد ID → حذف من قاعدة البيانات أولاً
+    deleteMutation.mutate(player.id, {
+      onSuccess: () => {
+        removeRow(index); // تحديث الواجهة بعد نجاح الحذف
+      },
+    });
+  }
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-64">
@@ -111,7 +136,9 @@ export default function Players({ roomId }: RoomPageProps) {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => removeRow(idx)}
+              onClick={() =>
+                handleRemovePlayer(p, idx, removeRow, deleteMutation)
+              }
             >
               إزالة
             </Button>
@@ -126,6 +153,7 @@ export default function Players({ roomId }: RoomPageProps) {
           >
             {mutation.isPending ? "جاري الحفظ..." : "حفظ التعديلات"}
           </Button>
+          <ClearRoomButton roomId={roomId} />
         </div>
       </CardContent>
     </Card>

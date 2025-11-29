@@ -29,14 +29,14 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
-      maxAge: 900,
+      maxAge: 2592000,
     });
 
     (await cookies()).set("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
-      maxAge: 900, // 👈🏻 تم التعديل: 30 يومًا (30 * 24 * 60 * 60)
+      maxAge: 2678400, // 👈🏻 تم التعديل: 30 يومًا (30 * 24 * 60 * 60)
     });
 
     return NextResponse.json({

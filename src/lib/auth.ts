@@ -17,7 +17,7 @@ type JWTRefreshPayload = {
   userId: string;
 };
 
-export async function signJWT(payload: JWTPayload, expiresIn: string = "15m") {
+export async function signJWT(payload: JWTPayload, expiresIn: string = "30d") {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -29,7 +29,7 @@ export async function signRefreshToken(payload: JWTRefreshPayload) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("30d")
+    .setExpirationTime("31d")
     .sign(REFRESH_SECRET_KEY);
 }
 
