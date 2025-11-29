@@ -15,6 +15,7 @@ interface Player {
 }
 
 interface NewPlayer {
+  id?: string; // ← إضافة ID
   username: string;
   points: number;
 }
@@ -34,6 +35,7 @@ export default function Players({ roomId }: RoomPageProps) {
     if (players && players.length) {
       setNewPlayers(
         players.map((p: Player) => ({
+          id: p.id,
           username: p.username,
           points: p.totalScore,
         }))
@@ -92,7 +94,7 @@ export default function Players({ roomId }: RoomPageProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {newPlayers.map((p, idx) => (
-          <div key={p.username || idx} className="flex gap-2 items-center">
+          <div key={p.id ?? `new-${idx}`} className="flex gap-2 items-center">
             <Input
               placeholder="اسم اللاعب"
               value={p.username}

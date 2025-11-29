@@ -9,28 +9,40 @@ export async function POST(
   const { roomId } = await params;
 
   try {
-    const { players } = await req.json(); // [{ username, points }, ...]
+    const { players } = await req.json();
+    // players: [{ id?, username, points }]
 
     await Promise.all(
-      players.map(async (p: { username: string; points: number }) => {
-        const player = await prisma.player.upsert({
-          where: { username: p.username },
-          update: {},
-          create: { username: p.username },
-        });
+      players.map(
+        async (p: { id?: string; username: string; points: number }) => {
+          let player;
 
-        await prisma.playerRoomScore.upsert({
-          where: { playerId_roomId: { playerId: player.id, roomId } },
-          update: { totalScore: p.points }, // تحديث النقاط إذا موجود
-          create: { playerId: player.id, roomId, totalScore: p.points }, // إنشاء جديد إذا غير موجود
-        });
-      })
+          // إذا لديه ID → تحديث فقط
+          if (p.id) {
+            player = await prisma.player.update({
+              where: { id: p.id },
+              data: { username: p.username }, // ← يسمح بتعديل الاسم
+            });
+          } else {
+            // إذا بدون ID → إنشاء لاعب جديد
+            player = await prisma.player.create({
+              data: { username: p.username },
+            });
+          }
+
+          await prisma.playerRoomScore.upsert({
+            where: { playerId_roomId: { playerId: player.id, roomId } },
+            update: { totalScore: p.points },
+            create: { playerId: player.id, roomId, totalScore: p.points },
+          });
+        }
+      )
     );
 
-    return NextResponse.json({ message: "Players updated/added successfully" });
+    return NextResponse.json({ message: "Players updated successfully" });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "فشل التحديث/الإضافة" }, { status: 500 });
+    return NextResponse.json({ error: "فشل التحديث" }, { status: 500 });
   }
 }
 
