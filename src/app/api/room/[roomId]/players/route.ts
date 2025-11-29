@@ -48,21 +48,19 @@ export async function POST(
 
 export async function GET(
   req: Request,
-  { params }: { params: { roomId: string } }
+  context: { params: Promise<{ roomId: string }> } // ← هنا Promise
 ) {
-  const { roomId } = params;
+  const { roomId } = await context.params; // ← تفكيك الـ Promise
   if (!roomId) {
     return NextResponse.json({ error: "roomId غير موجود" }, { status: 400 });
   }
 
-  // 🔹 فقط جلب اللاعبين لهذه الغرفة
   const playerScores = await prisma.playerRoomScore.findMany({
-    where: { roomId }, // هنا roomId مهم جداً
+    where: { roomId },
     include: { player: true },
     orderBy: { totalScore: "desc" },
   });
 
-  // صياغة البيانات بالشكل المطلوب للواجهة
   const players = playerScores.map((ps) => ({
     id: ps.playerId,
     username: ps.player.username,
@@ -72,40 +70,40 @@ export async function GET(
   return NextResponse.json(players);
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { roomId: string; playerId: string } }
-) {
-  const { roomId, playerId } = params;
+// export async function DELETE(
+//   req: Request,
+//   { params }: { params: Promise<{ roomId: string; playerId: string }> }
+// ) {
+//   const { roomId, playerId } = await params;
 
-  try {
-    // 1) حذف نقاط اللاعب فقط من هذه الغرفة
-    await prisma.playerRoomScore.delete({
-      where: {
-        playerId_roomId: {
-          playerId,
-          roomId,
-        },
-      },
-    });
+//   try {
+//     // 1) حذف نقاط اللاعب فقط من هذه الغرفة
+//     await prisma.playerRoomScore.delete({
+//       where: {
+//         playerId_roomId: {
+//           playerId,
+//           roomId,
+//         },
+//       },
+//     });
 
-    // 2) فحص إذا اللاعب لم يعد مرتبط بأي غرفة → نحذفه (اختياري)
-    const stillExists = await prisma.playerRoomScore.findFirst({
-      where: { playerId },
-    });
+//     // 2) فحص إذا اللاعب لم يعد مرتبط بأي غرفة → نحذفه (اختياري)
+//     const stillExists = await prisma.playerRoomScore.findFirst({
+//       where: { playerId },
+//     });
 
-    if (!stillExists) {
-      await prisma.player.delete({
-        where: { id: playerId },
-      });
-    }
+//     if (!stillExists) {
+//       await prisma.player.delete({
+//         where: { id: playerId },
+//       });
+//     }
 
-    return NextResponse.json({ message: "تم حذف اللاعب نجاح" });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Failed to remove player" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json({ message: "تم حذف اللاعب نجاح" });
+//   } catch (error) {
+//     console.error(error);
+//     return NextResponse.json(
+//       { error: "Failed to remove player" },
+//       { status: 500 }
+//     );
+//   }
+// }
