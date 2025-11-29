@@ -100,7 +100,7 @@ export async function DELETE(
       });
     }
 
-    return NextResponse.json({ message: "Player removed successfully" });
+    return NextResponse.json({ message: "تم حذف اللاعب نجاح" });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
