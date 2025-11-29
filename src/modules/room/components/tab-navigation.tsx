@@ -29,7 +29,7 @@ const TabNavigation = () => {
     }
   }, [rooms, currentRoomId, router]);
 
-  if (isLoading) return <div>جاري التحميل...</div>;
+  if (isLoading) return <div></div>;
   if (error) return <div>حدث خطأ أثناء جلب الغرف</div>;
   if (!rooms.length) return <div>لا توجد غرف</div>;
 
