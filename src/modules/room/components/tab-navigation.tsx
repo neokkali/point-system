@@ -50,7 +50,7 @@ const TabNavigation = () => {
             <TabsTrigger
               key={room.id}
               value={room.id}
-              className="cursor-pointer"
+              className="cursor-pointer text-lg"
             >
               {room.name}
             </TabsTrigger>

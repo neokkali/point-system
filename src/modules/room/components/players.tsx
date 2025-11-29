@@ -10,6 +10,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import ClearRoomButton from "./clear-room-button";
 
 interface Player {
@@ -66,6 +67,7 @@ export default function Players({ roomId }: RoomPageProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players", roomId] });
+      toast.success("تم حفظ اللاعبين بنجاح");
     },
   });
 
