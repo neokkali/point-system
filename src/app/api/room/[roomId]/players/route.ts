@@ -48,9 +48,9 @@ export async function POST(
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ roomId: string }> }
+  { params }: { params: { roomId: string } }
 ) {
-  const { roomId } = await params;
+  const { roomId } = params;
   if (!roomId) {
     return NextResponse.json({ error: "roomId غير موجود" }, { status: 400 });
   }
@@ -74,9 +74,9 @@ export async function GET(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ roomId: string; playerId: string }> }
+  { params }: { params: { roomId: string; playerId: string } }
 ) {
-  const { roomId, playerId } = await params;
+  const { roomId, playerId } = params;
 
   try {
     // 1) حذف نقاط اللاعب فقط من هذه الغرفة
