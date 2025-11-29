@@ -110,7 +110,7 @@ export default function Players({ roomId }: RoomPageProps) {
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-64">
-        جاري التحميل...
+        <Loader2 className="animate-spin" />
       </div>
     );
   if (error)
