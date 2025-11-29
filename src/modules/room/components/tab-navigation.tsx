@@ -47,7 +47,11 @@ const TabNavigation = () => {
       >
         <TabsList className="w-full">
           {rooms.map((room: Room) => (
-            <TabsTrigger key={room.id} value={room.id} className="">
+            <TabsTrigger
+              key={room.id}
+              value={room.id}
+              className="cursor-pointer"
+            >
               {room.name}
             </TabsTrigger>
           ))}
