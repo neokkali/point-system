@@ -37,7 +37,7 @@ const Navbar = () => {
         </Link>
 
         {/* قائمة Dropdown */}
-        {isAuthenticated ? (
+        {!loading && isAuthenticated && (
           <DropdownMenu dir="rtl" modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="rounded-full px-4">
@@ -49,8 +49,6 @@ const Navbar = () => {
               className="w-60 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
               align="start"
             >
-              {/* <DropdownMenuSeparator className="my-1" /> */}
-
               <DropdownMenuGroup>
                 {isAdmin && (
                   <>
@@ -75,7 +73,10 @@ const Navbar = () => {
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : (
+        )}
+
+        {/* زر تسجيل الدخول: يظهر فقط إن لم يكن loading + غير مصرح */}
+        {!loading && !isAuthenticated && (
           <Link href="/auth" className="">
             تسجيل الدخول
           </Link>
