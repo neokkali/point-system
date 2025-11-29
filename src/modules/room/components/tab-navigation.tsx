@@ -19,7 +19,7 @@ const TabNavigation = () => {
           onClick={() => router.push(`/rooms/${room.id}`)}
           className="px-4 py-2 border rounded cursor-pointer hover:bg-gray-200"
         >
-          {room.name} ({room.type})
+          {room.name}
         </div>
       ))}
     </div>

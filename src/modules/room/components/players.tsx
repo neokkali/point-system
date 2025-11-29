@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useClearRoom } from "@/hooks/use-clear-room";
 import { useDeletePlayer } from "@/hooks/use-deletet-player";
 import { usePlayers } from "@/hooks/use-players";
 import api from "@/lib/axiosClient";
@@ -18,9 +17,9 @@ interface Player {
 }
 
 interface NewPlayer {
-  id?: string; // ← إضافة ID
+  id?: string;
   username: string;
-  points: number;
+  points: string; // نخزن كـ string أثناء الكتابة
 }
 
 interface RoomPageProps {
@@ -29,35 +28,44 @@ interface RoomPageProps {
 
 export default function Players({ roomId }: RoomPageProps) {
   const queryClient = useQueryClient();
-  const clearRoomMutation = useClearRoom(roomId);
   const { data: players, isLoading, error } = usePlayers(roomId);
 
   const [newPlayers, setNewPlayers] = useState<NewPlayer[]>([]);
 
-  // ✅ تحديث newPlayers بشكل آمن فقط عند تغيّر roomId أو players
+  // ✅ تحديث newPlayers عند تغيّر roomId أو players
   useEffect(() => {
     if (players && players.length) {
       setNewPlayers(
         players.map((p: Player) => ({
           id: p.id,
           username: p.username,
-          points: p.totalScore,
+          points: String(p.totalScore), // نخزن كـ string
         }))
       );
     } else {
       setNewPlayers([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [players, roomId]); // سيحدث فقط عند تغير roomId أو players
+  }, [players, roomId]);
 
+  // Mutation لحفظ اللاعبين
   const mutation = useMutation({
     mutationFn: async (playersToUpdate: NewPlayer[]) => {
-      await api.post(`/room/${roomId}/players`, { players: playersToUpdate });
+      // تحويل النقاط من string إلى number فقط إذا موجودة
+      const sanitizedPlayers = playersToUpdate.map((p) => ({
+        id: p.id,
+        username: p.username,
+        points: p.points === "" ? undefined : Number(p.points),
+      }));
+      await api.post(`/room/${roomId}/players`, { players: sanitizedPlayers });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players", roomId] });
     },
   });
+
+  // Mutation لحذف لاعب
+  const deleteMutation = useDeletePlayer(roomId);
 
   const handleChange = (
     index: number,
@@ -66,27 +74,22 @@ export default function Players({ roomId }: RoomPageProps) {
   ) => {
     setNewPlayers((prev) => {
       const updated = [...prev];
-      if (field === "points") updated[index][field] = Number(value);
-      else updated[index][field] = value;
+      updated[index][field] = value;
       return updated;
     });
   };
 
   const addNewRow = () =>
-    setNewPlayers((prev) => [...prev, { username: "", points: 0 }]);
+    setNewPlayers((prev) => [...prev, { username: "", points: "" }]);
+
   const removeRow = (index: number) =>
     setNewPlayers((prev) => prev.filter((_, i) => i !== index));
+
   const handleSave = () => mutation.mutate(newPlayers);
 
-  const deleteMutation = useDeletePlayer(roomId);
-  function handleRemovePlayer(
-    player: { id?: string },
-    index: number,
-    removeRow: (idx: number) => void,
-    deleteMutation: ReturnType<typeof useDeletePlayer>
-  ) {
+  const handleRemovePlayer = (player: { id?: string }, index: number) => {
     if (!player.id) {
-      // لو بدون ID → فقط احذفه من الواجهة
+      // لو بدون ID → حذف من الواجهة فقط
       removeRow(index);
       return;
     }
@@ -97,7 +100,7 @@ export default function Players({ roomId }: RoomPageProps) {
         removeRow(index); // تحديث الواجهة بعد نجاح الحذف
       },
     });
-  }
+  };
 
   if (isLoading)
     return (
@@ -136,9 +139,7 @@ export default function Players({ roomId }: RoomPageProps) {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() =>
-                handleRemovePlayer(p, idx, removeRow, deleteMutation)
-              }
+              onClick={() => handleRemovePlayer(p, idx)}
             >
               إزالة
             </Button>
