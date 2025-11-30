@@ -113,14 +113,14 @@ export default function Players({ roomId }: RoomPageProps) {
               placeholder="اسم اللاعب"
               value={p.username}
               onChange={(e) => handleChange(idx, "username", e.target.value)}
-              className="flex-1 text-lg"
+              className="flex-1 text-sm md:text-lg"
             />
             <Input
               type="number"
               placeholder="النقاط"
               value={p.points}
               onChange={(e) => handleChange(idx, "points", e.target.value)}
-              className="w-24 text-lg"
+              className="w-18 md:w-24 text-base md:text-lg"
             />
             <Button
               variant="destructive"
