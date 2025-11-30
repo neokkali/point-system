@@ -12,6 +12,6 @@ export function useCurrentUser() {
       return res.data.user ?? null;
     },
     retry: false, // لا تكرر لأن 401 طبيعي عند عدم تسجيل الدخول
-    staleTime: 60 * 1000, // دقيقة كاملة كاش
+    staleTime: 5 * 60 * 1000, // دقيقة كاملة كاش
   });
 }
