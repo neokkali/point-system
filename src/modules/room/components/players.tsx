@@ -8,8 +8,9 @@ import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
 import { useAuth } from "@/providers/auth-provider";
-import { Loader2 } from "lucide-react";
+import { Copy, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import ClearRoomButton from "./clear-room-button";
 
 interface Player {
@@ -87,6 +88,21 @@ export default function Players({ roomId }: RoomPageProps) {
     deleteMutation.mutate(player.id, { onSuccess: () => removeRow(index) });
   };
 
+  const handleCopyPoints = (players: Player[]) => {
+    const sortedPlayers = [...players].sort(
+      (a, b) => b.totalScore - a.totalScore
+    );
+    if (sortedPlayers.length === 0) {
+      toast.error("لا يوجد نقاط لنسخها!");
+      return;
+    }
+    const formatted = sortedPlayers
+      .map((p) => `${p.username}: ${p.totalScore}`)
+      .join(" | ");
+    navigator.clipboard.writeText(formatted);
+    toast.success("تم نسخ النقاط بنجاح!");
+  };
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center h-64">
@@ -103,8 +119,17 @@ export default function Players({ roomId }: RoomPageProps) {
 
   return (
     <Card className="max-w-3xl mx-auto mt-6">
-      <CardHeader>
+      <CardHeader className="flex items-center justify-between">
         <CardTitle>إدارة اللاعبين للغرفة</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={() => handleCopyPoints(players)}
+        >
+          <Copy className="w-4 h-4" />
+          نسخ النقاط
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {newPlayers.map((p, idx) => (

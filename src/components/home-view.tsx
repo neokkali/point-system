@@ -139,9 +139,7 @@ export default function HomeView() {
                         className="space-y-1"
                       >
                         <div className="flex justify-between items-center">
-                          <span className="font-semibold">
-                            {player.username}
-                          </span>
+                          <span className="font-bold">{player.username}</span>
                           {isKing && (
                             <Badge variant="destructive">الملك 👑</Badge>
                           )}
@@ -149,9 +147,9 @@ export default function HomeView() {
                             {player.totalScore} نقطة
                           </span>
                         </div>
-                        <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full relative">
+                        <div className="h-1 w-full bg-gray-200 dark:bg-gray-700 rounded-full relative">
                           <div
-                            className="h-2 bg-yellow-400 rounded-full transition-all duration-300"
+                            className="h-1 bg-black/50 dark:bg-red-400 rounded-full transition-all duration-300"
                             style={{ width: `${progressPercent}%` }}
                           />
                         </div>
