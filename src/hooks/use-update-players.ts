@@ -12,7 +12,9 @@ export function useUpdatePlayers(roomId: string) {
       await api.post(`/room/${roomId}/players`, { players });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["players", roomId] });
+      queryClient.invalidateQueries({
+        queryKey: ["players", "global-scores", roomId],
+      });
       toast.success("تم تحديث قائمة اللاعبين بنجاح");
     },
     onError: (err) => console.error("خطأ أثناء تحديث اللاعبين:", err),

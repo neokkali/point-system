@@ -19,6 +19,7 @@ const Navbar = () => {
 
   const { user, isAuthenticated, logout, loading } = useAuth();
   const isAdmin = user?.role === "ADMIN";
+  const isModerator = user?.role === "MODERATOR";
 
   const sliceUsername = (username: string) => {
     if (!username) return "User";
@@ -29,7 +30,7 @@ const Navbar = () => {
     <nav className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 shadow-md">
       {/* الشعار أو اسم النظام */}
       <div className="flex items-center gap-4">
-        {!loading && isAuthenticated && (
+        {!loading && isAuthenticated && (isAdmin || isModerator) && (
           <Link
             href="/rooms"
             className="text-xl font-bold text-gray-800 dark:text-white"
