@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { TOKEN_EXPIRED, verifyJWT } from "@/lib/auth";
+import { prisma } from "@/lib/priams";
 
 export async function GET() {
   const token = (await cookies()).get("accessToken")?.value;
@@ -18,7 +19,16 @@ export async function GET() {
     );
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: {
+      id: true,
+      username: true,
+      role: true,
+    },
+  });
+
   return NextResponse.json({
-    user: { id: payload.id, username: payload.username, role: payload.role },
+    user,
   });
 }

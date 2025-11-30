@@ -1,6 +1,7 @@
 // src/lib/user-auth.ts
 import { cookies } from "next/headers";
 import { verifyJWT } from "./auth";
+import { prisma } from "./priams";
 
 type UserPayload = {
   userId: string;
@@ -13,14 +14,19 @@ const getUserFromAuth = async (): Promise<UserPayload | null> => {
     const token = (await cookies()).get("accessToken")?.value;
     if (!token) return null;
 
-    const payload = (await verifyJWT(token)) as UserPayload | null;
+    const payload = await verifyJWT(token);
     if (!payload) return null;
 
-    return {
-      userId: payload.userId,
-      username: payload.username,
-      role: payload.role,
-    };
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+      },
+    });
+
+    return user ? (payload as UserPayload) : null;
   } catch {
     return null;
   }

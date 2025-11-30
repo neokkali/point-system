@@ -10,7 +10,7 @@ const REFRESH_SECRET_KEY = new TextEncoder().encode(
 type JWTPayload = {
   userId: string;
   username: string;
-  role: string;
+  role: "ADMIN" | "MODERATOR" | "USER";
 };
 
 type JWTRefreshPayload = {
@@ -36,7 +36,7 @@ export async function signRefreshToken(payload: JWTRefreshPayload) {
 export async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, SECRET_KEY);
-    return payload;
+    return payload as JWTPayload;
   } catch {
     return null;
   }
