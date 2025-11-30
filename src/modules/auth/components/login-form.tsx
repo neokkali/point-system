@@ -30,8 +30,8 @@ const LoginForm = ({ setIsRegister }: Props) => {
     setLoading(true);
     // Handle registration logic here
     try {
-      const { data } = await api.post("/auth/login", { username, password });
-      login(data.user);
+      await api.post("/auth/login", { username, password });
+      login();
 
       toast.success("تم تسجيل الدخول بنجاح");
       router.push("/");
