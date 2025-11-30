@@ -57,6 +57,12 @@ const Navbar = () => {
                       السوابر
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                      onClick={() => router.push("/super/permissions")}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      الصلاحيات
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                       onClick={() => router.push("/rooms/create")}
                       className="hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
