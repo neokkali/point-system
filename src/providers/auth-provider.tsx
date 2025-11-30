@@ -4,6 +4,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import api from "@/lib/axiosClient";
 import { useRouter } from "next/navigation";
 import { createContext, ReactNode, useContext, useEffect } from "react";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -14,7 +15,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (userData: User) => void;
+  login: () => void;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await api.post("/auth/logout");
     router.push("/auth");
     router.refresh();
+    toast.success("تم تسجيل الخروج بنجاح");
   };
 
   return (

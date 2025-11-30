@@ -10,12 +10,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggleButton } from "./theme-toggle.button";
 
 const Navbar = () => {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isRooms = pathname.startsWith("/rooms");
 
   const { user, isAuthenticated, logout, loading } = useAuth();
   const isAdmin = user?.role === "ADMIN";
@@ -30,15 +34,6 @@ const Navbar = () => {
     <nav className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 shadow-md">
       {/* الشعار أو اسم النظام */}
       <div className="flex items-center gap-4">
-        {!loading && isAuthenticated && (isAdmin || isModerator) && (
-          <Link
-            href="/rooms"
-            className="text-xl font-bold text-gray-800 dark:text-white"
-          >
-            نقاطي
-          </Link>
-        )}
-
         {/* قائمة Dropdown */}
         {!loading && isAuthenticated && (
           <DropdownMenu dir="rtl" modal={false}>
@@ -81,7 +76,30 @@ const Navbar = () => {
           </DropdownMenu>
         )}
 
-        {/* زر تسجيل الدخول: يظهر فقط إن لم يكن loading + غير مصرح */}
+        <div className="flex items-center mt-0.5 gap-2">
+          <Link
+            href="/"
+            className={cn(
+              "text-base md:text-lg",
+              pathname === "/" ? "font-bold" : "font-normal"
+            )}
+          >
+            الرئيسية
+          </Link>
+
+          {!loading && isAuthenticated && (isAdmin || isModerator) && (
+            <Link
+              href="/rooms"
+              className={cn(
+                "text-base md:text-lg",
+                isRooms ? "font-bold" : "font-normal"
+              )}
+            >
+              نقاطي
+            </Link>
+          )}
+        </div>
+
         {!loading && !isAuthenticated && (
           <Link href="/auth" className="">
             تسجيل الدخول
@@ -91,9 +109,6 @@ const Navbar = () => {
 
       {/* عناصر اليمين */}
       <div className="flex items-center gap-4">
-        <Link href="/" className="text-lg">
-          الرئيسية
-        </Link>
         <ThemeToggleButton />
       </div>
     </nav>
