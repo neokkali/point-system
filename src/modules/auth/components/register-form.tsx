@@ -5,6 +5,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/axiosClient";
 import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 interface Props {
   setIsRegister: (value: boolean) => void;
@@ -25,7 +26,7 @@ const RegisterForm = ({ setIsRegister }: Props) => {
     // Handle registration logic here
     try {
       await api.post("/auth/register", { username, password });
-      // toast.success("تم إنشاء الحساب بنجاح، يمكنك تسجيل الدخول الآن");
+      toast.success("تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول");
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
         console.error("Registration error:", error.message);
