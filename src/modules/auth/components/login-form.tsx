@@ -38,7 +38,8 @@ const LoginForm = ({ setIsRegister }: Props) => {
       router.refresh();
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
-        console.error("Registration error:", error.message);
+        console.log("Registration error:", error.response?.data?.message);
+        toast.error("معلومات الدخول غير صحيحة");
       } else {
         console.error("An unexpected error occurred:", error);
       }

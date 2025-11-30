@@ -1,62 +1,80 @@
+import { prisma } from "@/lib/priams";
+import getUserFromAuth from "@/lib/user-auth";
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/priams";
+const allowedRoles = ["ADMIN", "MODERATOR"];
 
+// ------------------- POST: إضافة/تحديث اللاعبين -------------------
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ roomId: string }> }
 ) {
   const { roomId } = await params;
+  const user = await getUserFromAuth();
+  if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!allowedRoles.includes(user.role))
+    return NextResponse.json({ error: "غير مصرح بالدخول" }, { status: 403 });
 
   try {
     const { players } = await req.json();
-    // players: [{ id?, username, points }]
 
     await Promise.all(
       players.map(
         async (p: { id?: string; username: string; points: number }) => {
           let player;
 
-          // إذا لديه ID → تحديث فقط
           if (p.id) {
-            player = await prisma.player.update({
-              where: { id: p.id },
-              data: { username: p.username }, // ← يسمح بتعديل الاسم
-            });
-          } else {
-            // إذا بدون ID → إنشاء لاعب جديد
-            player = await prisma.player.create({
+            // تحديث اللاعب فقط إذا يخص المشرف
+            const updatedCount = await prisma.player.updateMany({
+              where: { id: p.id, userId: user.userId },
               data: { username: p.username },
+            });
+
+            if (updatedCount.count === 0) {
+              throw new Error(`لا يمكن تعديل اللاعب ${p.id} ليس ملكك`);
+            }
+
+            player = await prisma.player.findUnique({ where: { id: p.id } });
+          } else {
+            // إنشاء لاعب جديد مرتبط بالمشرف
+            player = await prisma.player.create({
+              data: { username: p.username, userId: user.userId },
             });
           }
 
+          // إضافة أو تحديث النقاط في الغرفة
           await prisma.playerRoomScore.upsert({
-            where: { playerId_roomId: { playerId: player.id, roomId } },
+            where: { playerId_roomId: { playerId: player!.id, roomId } },
             update: { totalScore: p.points },
-            create: { playerId: player.id, roomId, totalScore: p.points },
+            create: { playerId: player!.id, roomId, totalScore: p.points },
           });
         }
       )
     );
 
-    return NextResponse.json({ message: "Players updated successfully" });
+    return NextResponse.json({ message: "تم تحديث اللاعبين بنجاح" });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "فشل التحديث" }, { status: 500 });
+    return NextResponse.json({ error: err || "فشل التحديث" }, { status: 500 });
   }
 }
 
+// ------------------- GET: جلب اللاعبين لمشرف محدد -------------------
 export async function GET(
   req: Request,
-  context: { params: Promise<{ roomId: string }> } // ← هنا Promise
+  { params }: { params: Promise<{ roomId: string }> }
 ) {
-  const { roomId } = await context.params; // ← تفكيك الـ Promise
-  if (!roomId) {
+  const { roomId } = await params;
+  if (!roomId)
     return NextResponse.json({ error: "roomId غير موجود" }, { status: 400 });
-  }
+
+  const user = await getUserFromAuth();
+  if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
   const playerScores = await prisma.playerRoomScore.findMany({
-    where: { roomId },
+    where: {
+      roomId,
+      player: { userId: user.userId }, // فقط لاعبين هذا المشرف
+    },
     include: { player: true },
     orderBy: { totalScore: "desc" },
   });
@@ -70,40 +88,38 @@ export async function GET(
   return NextResponse.json(players);
 }
 
-// export async function DELETE(
-//   req: Request,
-//   { params }: { params: Promise<{ roomId: string; playerId: string }> }
-// ) {
-//   const { roomId, playerId } = await params;
+// ------------------- DELETE: حذف لاعب واحد لغرفة لمشرف محدد -------------------
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ roomId: string; playerId: string }> }
+) {
+  const user = await getUserFromAuth();
+  if (!user)
+    return NextResponse.json({ error: "غير مصرح لك" }, { status: 401 });
+  if (!allowedRoles.includes(user.role))
+    return NextResponse.json({ error: "غير مصرح بالدخول" }, { status: 403 });
 
-//   try {
-//     // 1) حذف نقاط اللاعب فقط من هذه الغرفة
-//     await prisma.playerRoomScore.delete({
-//       where: {
-//         playerId_roomId: {
-//           playerId,
-//           roomId,
-//         },
-//       },
-//     });
+  const { roomId, playerId } = await params;
 
-//     // 2) فحص إذا اللاعب لم يعد مرتبط بأي غرفة → نحذفه (اختياري)
-//     const stillExists = await prisma.playerRoomScore.findFirst({
-//       where: { playerId },
-//     });
+  try {
+    // حذف نقاط اللاعب إذا كان يخص هذا المشرف
+    await prisma.playerRoomScore.deleteMany({
+      where: { roomId, playerId, player: { userId: user.userId } },
+    });
 
-//     if (!stillExists) {
-//       await prisma.player.delete({
-//         where: { id: playerId },
-//       });
-//     }
+    // حذف اللاعب إذا لم يعد مرتبط بأي غرفة
+    const stillExists = await prisma.playerRoomScore.findFirst({
+      where: { playerId, player: { userId: user.userId } },
+    });
+    if (!stillExists) {
+      await prisma.player.deleteMany({
+        where: { id: playerId, userId: user.userId },
+      });
+    }
 
-//     return NextResponse.json({ message: "تم حذف اللاعب نجاح" });
-//   } catch (error) {
-//     console.error(error);
-//     return NextResponse.json(
-//       { error: "Failed to remove player" },
-//       { status: 500 }
-//     );
-//   }
-// }
+    return NextResponse.json({ message: "تم حذف اللاعب بنجاح" });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "فشل حذف اللاعب" }, { status: 500 });
+  }
+}

@@ -9,11 +9,8 @@ export function useDeletePlayer(roomId: string) {
       await api.delete(`/room/${roomId}/players/${playerId}`);
     },
     onSuccess: () => {
-      // إعادة جلب اللاعبين للغرفة بعد الحذف
       queryClient.invalidateQueries({ queryKey: ["players", roomId] });
     },
-    onError: (err) => {
-      console.error("خطأ أثناء الحذف:", err);
-    },
+    onError: (err) => console.error("خطأ أثناء الحذف:", err),
   });
 }

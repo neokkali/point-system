@@ -5,14 +5,14 @@ export function useUpdatePlayers(roomId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (players: { username: string; points: number }[]) => {
+    mutationFn: async (
+      players: { id?: string; username: string; points: number }[]
+    ) => {
       await api.post(`/room/${roomId}/players`, { players });
     },
     onSuccess: () => {
-      // تحديث البيانات في cache بدون refetch كامل
-      queryClient.invalidateQueries({
-        queryKey: ["players", roomId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["players", roomId] });
     },
+    onError: (err) => console.error("خطأ أثناء تحديث اللاعبين:", err),
   });
 }
