@@ -9,7 +9,6 @@ export const useRooms = () => {
     queryKey: ["rooms"],
     queryFn: async () => {
       const res = await api.get("/rooms"); // استخدم api بدل axios
-      if (!res.data) throw new Error("No data returned from API");
       return res.data; // يجب أن ترجع بيانات صحيحة دائمًا
     },
     staleTime: 1000 * 60, // اختياري: اجعل البيانات صالحة لمدة دقيقة قبل إعادة الجلب

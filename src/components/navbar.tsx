@@ -29,12 +29,14 @@ const Navbar = () => {
     <nav className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 shadow-md">
       {/* الشعار أو اسم النظام */}
       <div className="flex items-center gap-4">
-        <Link
-          href="/"
-          className="text-xl font-bold text-gray-800 dark:text-white"
-        >
-          نقاطي
-        </Link>
+        {!loading && isAuthenticated && (
+          <Link
+            href="/rooms"
+            className="text-xl font-bold text-gray-800 dark:text-white"
+          >
+            نقاطي
+          </Link>
+        )}
 
         {/* قائمة Dropdown */}
         {!loading && isAuthenticated && (
@@ -56,7 +58,7 @@ const Navbar = () => {
                       السوابر
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => router.push("/rooms")}
+                      onClick={() => router.push("/rooms/create")}
                       className="hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       الغرف
@@ -85,10 +87,14 @@ const Navbar = () => {
 
       {/* عناصر اليمين */}
       <div className="flex items-center gap-4">
-        <ThemeToggleButton />
-        <Button variant="ghost" className="hidden md:block">
-          نظام نقاط المقالات والمسابقات
+        <Button
+          onClick={() => router.push("/")}
+          variant="ghost"
+          className="hidden md:block"
+        >
+          الرئيسية
         </Button>
+        <ThemeToggleButton />
       </div>
     </nav>
   );

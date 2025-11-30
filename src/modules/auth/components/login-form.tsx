@@ -57,6 +57,7 @@ const LoginForm = ({ setIsRegister }: Props) => {
             <FieldLabel htmlFor="username">أسم المستخدم</FieldLabel>
             <Input
               id="username"
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="أدخل أسم المستخدم هنا"

@@ -1,4 +1,4 @@
-import RoomView from "@/modules/room/components/room-view";
+import RoomView from "@/components/home-view";
 
 export default function Page() {
   return (

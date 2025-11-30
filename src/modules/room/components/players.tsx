@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
@@ -28,6 +29,7 @@ interface RoomPageProps {
 }
 
 export default function Players({ roomId }: RoomPageProps) {
+  useAuthGuard(["ADMIN", "MODERATOR"], "/auth", "/403");
   const { user, isAuthenticated } = useAuth();
   const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
 
