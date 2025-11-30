@@ -73,7 +73,7 @@ export default function PermissionsView() {
           <table className="w-full table-auto border-collapse">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
-                <th className="p-3 text-left border-b">الاسم</th>
+                <th className="p-3 text-right border-b">الاسم</th>
                 <th className="p-3 text-center border-b">مدير</th>
                 <th className="p-3 text-center border-b">مشرف</th>
                 <th className="p-3 text-center border-b">بدون صلاحيات</th>
