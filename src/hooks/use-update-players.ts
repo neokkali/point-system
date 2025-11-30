@@ -13,7 +13,7 @@ export function useUpdatePlayers(roomId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["players", "global-scores", roomId],
+        queryKey: ["players", roomId],
       });
       toast.success("تم تحديث قائمة اللاعبين بنجاح");
     },
