@@ -88,13 +88,9 @@ const Navbar = () => {
 
       {/* عناصر اليمين */}
       <div className="flex items-center gap-4">
-        <Button
-          onClick={() => router.push("/")}
-          variant="ghost"
-          className="hidden md:block"
-        >
+        <Link href="/" className="text-lg">
           الرئيسية
-        </Button>
+        </Link>
         <ThemeToggleButton />
       </div>
     </nav>
