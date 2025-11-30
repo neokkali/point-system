@@ -55,7 +55,10 @@ const Navbar = () => {
               <DropdownMenuGroup>
                 {isAdmin && (
                   <>
-                    <DropdownMenuItem className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <DropdownMenuItem
+                      onClick={() => router.push("/super")}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
                       السوابر
                     </DropdownMenuItem>
                     <DropdownMenuItem
