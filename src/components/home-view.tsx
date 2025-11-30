@@ -42,22 +42,38 @@ export default function HomeView() {
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-center text-gray-500 p-6">لا توجد نقاط بعد</div>
+      <div className="text-center text-gray-500 p-6">
+        لا توجد نقاط الملك حاليا في أي غرفة
+      </div>
     );
   }
 
   // ---------------------- Function to copy points ----------------------
   const handleCopyPoints = (players: Player[]) => {
-    // ترتيب تصاعدي من الأعلى إلى الأقل
     const sortedPlayers = [...players].sort(
       (a, b) => b.totalScore - a.totalScore
     );
+    if (sortedPlayers.length === 0) {
+      toast.error("لا يوجد نقاط لنسخها!");
+      return;
+    }
     const formatted = sortedPlayers
       .map((p) => `${p.username}: ${p.totalScore}`)
       .join(" | ");
     navigator.clipboard.writeText(formatted);
     toast.success("تم نسخ النقاط بنجاح!");
   };
+
+  // تحقق هل كل الغرف فارغة
+  const allRoomsEmpty = data.every((room: Room) => room.players.length === 0);
+
+  if (allRoomsEmpty) {
+    return (
+      <div className="text-center text-gray-500 p-6 text-xl font-semibold">
+        لا توجد نقاط الملك حاليا في أي غرفة
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto mt-8 space-y-8">
@@ -67,6 +83,24 @@ export default function HomeView() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {data.map((room: Room) => {
+          if (!room.players || room.players.length === 0) {
+            return (
+              <Card
+                key={room.roomId}
+                className="border shadow-sm dark:border-gray-700"
+              >
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold">
+                    {room.roomName}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-center text-gray-500 font-medium">
+                  لا يوجد نقاط في هذه الغرفة
+                </CardContent>
+              </Card>
+            );
+          }
+
           const maxScore = Math.max(...room.players.map((p) => p.totalScore));
 
           return (
@@ -88,7 +122,6 @@ export default function HomeView() {
                   نسخ النقاط
                 </Button>
               </CardHeader>
-
               <CardContent className="space-y-2">
                 {room.players
                   .slice()
