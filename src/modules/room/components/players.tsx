@@ -121,15 +121,17 @@ export default function Players({ roomId }: RoomPageProps) {
     <Card className="max-w-3xl mx-auto mt-6">
       <CardHeader className="flex items-center justify-between">
         <CardTitle>إدارة اللاعبين للغرفة</CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-          onClick={() => handleCopyPoints(players)}
-        >
-          <Copy className="w-4 h-4" />
-          نسخ النقاط
-        </Button>
+        {players.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => handleCopyPoints(players)}
+          >
+            <Copy className="w-4 h-4" />
+            نسخ النقاط
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {newPlayers.map((p, idx) => (
