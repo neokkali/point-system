@@ -34,6 +34,7 @@ const RegisterForm = ({ setIsRegister }: Props) => {
       }
     } finally {
       setLoading(false);
+      setIsRegister(false);
     }
   };
 
