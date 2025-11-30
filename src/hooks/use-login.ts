@@ -19,7 +19,7 @@ export function useLogin(onSuccessRedirect: (roomId: string) => void) {
       return res.data;
     },
     onSuccess: (data) => {
-      login(data.user); // حفظ المستخدم في auth context
+      login(); // حفظ المستخدم في auth context
       toast.success("تم تسجيل الدخول بنجاح");
 
       // توجيه المستخدم حسب أول غرفة له
