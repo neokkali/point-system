@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const user = await getUserFromAuth();
-  if (!user || user.role !== "ADMIN") {
+  if (!user || (user.role !== "ADMIN" && user.role !== "MODERATOR")) {
     return NextResponse.json(
       { error: "غير مصرح بالدخول إلى هذه البيانات" },
       { status: 403 }
