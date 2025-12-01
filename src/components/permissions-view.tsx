@@ -94,6 +94,7 @@ export default function PermissionsView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["current-user"] });
       toast.success("✅ تم تحديث الصلاحيات بنجاح.");
     },
     onError: (error) => {
