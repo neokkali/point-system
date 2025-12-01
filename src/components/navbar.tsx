@@ -41,6 +41,14 @@ const Navbar = () => {
           <DropdownMenu dir="rtl" modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="rounded-full px-4">
+                {(isAdmin || isModerator) && (
+                  <Shield
+                    className={cn(
+                      "mb-1",
+                      isAdmin ? "text-red-500" : "text-blue-500"
+                    )}
+                  />
+                )}
                 {sliceUsername(user?.username || "User")}
               </Button>
             </DropdownMenuTrigger>
