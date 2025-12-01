@@ -54,13 +54,13 @@ const Navbar = () => {
                       onClick={() => router.push("/super")}
                       className="hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
-                      السوابر
+                      نقاط السوابر
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => router.push("/super/permissions")}
                       className="hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
-                      الصلاحيات
+                      صلاحيات المستخدمين
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => router.push("/rooms/create")}

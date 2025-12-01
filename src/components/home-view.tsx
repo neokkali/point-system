@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGlobalScores } from "@/hooks/use-global-scores";
-import { Copy, Loader2 } from "lucide-react";
+import { Check, Copy, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 // ---------------------- Types ----------------------
@@ -22,6 +23,7 @@ type Room = {
 
 // ---------------------- Component ----------------------
 export default function HomeView() {
+  const [isCopied, setIsCopied] = useState<{ [roomId: string]: boolean }>({});
   const { data, isLoading, error } = useGlobalScores();
 
   if (isLoading) {
@@ -49,7 +51,7 @@ export default function HomeView() {
   }
 
   // ---------------------- Function to copy points ----------------------
-  const handleCopyPoints = (players: Player[]) => {
+  const handleCopyPoints = (roomId: string, players: Player[]) => {
     const sortedPlayers = [...players].sort(
       (a, b) => b.totalScore - a.totalScore
     );
@@ -61,7 +63,10 @@ export default function HomeView() {
       .map((p) => `${p.username}: ${p.totalScore}`)
       .join(" | ");
     navigator.clipboard.writeText(formatted);
-    toast.success("تم نسخ النقاط بنجاح!");
+    setIsCopied((prev) => ({ ...prev, [roomId]: true }));
+    setTimeout(() => {
+      setIsCopied((prev) => ({ ...prev, [roomId]: false }));
+    }, 2000);
   };
 
   // تحقق هل كل الغرف فارغة
@@ -115,11 +120,20 @@ export default function HomeView() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => handleCopyPoints(room.players)}
+                  className="flex items-center gap-1"
+                  onClick={() => handleCopyPoints(room.roomId, room.players)}
                 >
-                  <Copy className="w-4 h-4" />
-                  نسخ النقاط
+                  {isCopied[room.roomId] ? (
+                    <>
+                      <Check className="w-4 h-4 text-green-500" />
+                      تم النسخ
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mb-0.5" />
+                      نسخ النقاط
+                    </>
+                  )}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-2">

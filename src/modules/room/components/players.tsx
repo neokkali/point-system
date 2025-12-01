@@ -8,7 +8,7 @@ import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
 import { useAuth } from "@/providers/auth-provider";
-import { Copy, Loader2 } from "lucide-react";
+import { Check, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ClearRoomButton from "./clear-room-button";
@@ -31,6 +31,8 @@ interface RoomPageProps {
 
 export default function Players({ roomId }: RoomPageProps) {
   useAuthGuard(["ADMIN", "MODERATOR"], "/auth", "/");
+  const [isCopied, setIsCopied] = useState(false);
+
   const { user, isAuthenticated } = useAuth();
   const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
 
@@ -100,7 +102,10 @@ export default function Players({ roomId }: RoomPageProps) {
       .map((p) => `${p.username}: ${p.totalScore}`)
       .join(" | ");
     navigator.clipboard.writeText(formatted);
-    toast.success("تم نسخ النقاط بنجاح!");
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000);
   };
 
   if (isLoading)
@@ -128,8 +133,17 @@ export default function Players({ roomId }: RoomPageProps) {
             className="flex items-center gap-2"
             onClick={() => handleCopyPoints(players)}
           >
-            <Copy className="w-4 h-4" />
-            نسخ النقاط
+            {isCopied ? (
+              <>
+                <Check className="w-4 h-4 text-green-500" />
+                تم النسخ
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4 mb-0.5" />
+                نسخ النقاط
+              </>
+            )}
           </Button>
         )}
       </CardHeader>

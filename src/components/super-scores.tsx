@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/axiosClient";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 type RoomScore = {
   totalScore: number;
@@ -24,6 +25,12 @@ type UserSupervisor = {
   players: Player[];
 };
 
+const userRoles: Record<string, string> = {
+  ADMIN: "مدير",
+  MODERATOR: "مشرف",
+  USER: "مستخدم",
+};
+
 export default function SuperScores() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["supervisors"],
@@ -33,6 +40,14 @@ export default function SuperScores() {
     },
     refetchInterval: 5000,
   });
+
+  const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  const toggleRoom = (roomId: string) => {
+    setExpandedRooms((prev) => ({ ...prev, [roomId]: !prev[roomId] }));
+  };
 
   if (isLoading)
     return (
@@ -66,7 +81,7 @@ export default function SuperScores() {
               <CardTitle className="flex items-center justify-between text-base">
                 <span>{sup.username}</span>
                 <Badge variant={sup.role === "ADMIN" ? "default" : "outline"}>
-                  {sup.role === "ADMIN" ? "مدير" : "مشرف"}
+                  {userRoles[sup.role]}
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -77,9 +92,7 @@ export default function SuperScores() {
                   لا يوجد لاعبين مرتبطين
                 </div>
               ) : (
-                // -------------------------- تجميع غرف اللاعب تحت كل غرفة --------------------------
                 (() => {
-                  // HashMap => roomId → { roomName, scores: [] }
                   const roomsMap: Record<
                     string,
                     {
@@ -103,41 +116,55 @@ export default function SuperScores() {
                     });
                   });
 
-                  const rooms = Object.values(roomsMap);
+                  const rooms = Object.entries(roomsMap);
 
-                  return rooms.map((room) => (
+                  return rooms.map(([roomId, room]) => (
                     <div
-                      key={room.name}
-                      className="p-2 border rounded-lg bg-muted/30 space-y-2"
+                      key={roomId}
+                      className="border rounded-lg overflow-hidden"
                     >
-                      <div className="font-semibold text-sm text-primary">
-                        الغرفة: {room.name}
-                      </div>
+                      <button
+                        onClick={() => toggleRoom(roomId)}
+                        className="w-full flex justify-between items-center p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        <span className="font-semibold">{room.name}</span>
+                        {expandedRooms[roomId] ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
 
-                      {room.players.length === 0 ? (
-                        <div className="text-gray-500 text-xs">
-                          لا يوجد نقاط بعد
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          {room.players
-                            .sort((a, b) => b.score - a.score)
-                            .map((p, i) => (
-                              <div
-                                key={i}
-                                className="flex justify-between bg-white dark:bg-gray-800 p-1 px-2 rounded text-xs"
-                              >
-                                <span>{p.username}</span>
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px]"
+                      <div
+                        className={`transition-all duration-300 overflow-hidden ${
+                          expandedRooms[roomId] ? "max-h-96 p-2" : "max-h-0 p-0"
+                        }`}
+                      >
+                        {room.players.length === 0 ? (
+                          <div className="text-gray-500 text-xs text-center">
+                            لا يوجد نقاط بعد
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {room.players
+                              .sort((a, b) => b.score - a.score)
+                              .map((p, i) => (
+                                <div
+                                  key={i}
+                                  className="flex justify-between bg-white dark:bg-gray-800 p-1 px-2 rounded text-xs"
                                 >
-                                  {p.score} نقطة
-                                </Badge>
-                              </div>
-                            ))}
-                        </div>
-                      )}
+                                  <span>{p.username}</span>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[10px]"
+                                  >
+                                    {p.score} نقطة
+                                  </Badge>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ));
                 })()
