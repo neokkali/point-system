@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGlobalScores } from "@/hooks/use-global-scores";
@@ -57,7 +56,7 @@ export default function HomeView() {
 
   if (error)
     return (
-      <div className="text-center text-red-500 p-10">
+      <div className="h-[80vh] flex flex-col justify-center items-center text-red-500">
         حدث خطأ في جلب البيانات
       </div>
     );
@@ -74,11 +73,11 @@ export default function HomeView() {
     );
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 space-y-6">
+    <div className="max-w-5xl mx-auto py-8 px-0 sm:px-4 space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h2 className="text-base md:text-2xl font-bold tracking-tight flex items-center gap-2">
           <Trophy className="w-6 h-6 text-yellow-500" />
-          لوحة المتصدرين
+          لوحة النقاط
         </h2>
         <span className="text-sm text-muted-foreground bg-secondary/50 px-3 py-1 rounded-full">
           تحديث مباشر
@@ -108,12 +107,6 @@ export default function HomeView() {
                       <CardTitle className="text-base font-bold truncate max-w-[150px] sm:max-w-[200px]">
                         {room.roomName}
                       </CardTitle>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] h-5 px-1.5 font-normal text-muted-foreground"
-                      >
-                        {room.roomType === "QUIZ" ? "مسابقة" : "مقال"}
-                      </Badge>
                     </div>
                   </div>
 

@@ -8,10 +8,12 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
+import { LogOut, PlusCircle, Shield, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggleButton } from "./theme-toggle.button";
 
@@ -48,33 +50,40 @@ const Navbar = () => {
               align="start"
             >
               <DropdownMenuGroup>
+                {(isAdmin || isModerator) && (
+                  <DropdownMenuItem
+                    onClick={() => router.push("/super")}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <Users className="w-4 h-4 opacity-70" />
+                    نقاط السوابر
+                  </DropdownMenuItem>
+                )}
                 {isAdmin && (
                   <>
-                    <DropdownMenuItem
-                      onClick={() => router.push("/super")}
-                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      نقاط السوابر
-                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => router.push("/super/permissions")}
                       className="hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
+                      <Shield className="w-5 h-5" />
                       صلاحيات المستخدمين
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => router.push("/rooms/create")}
                       className="hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
+                      <PlusCircle className="w-4 h-4 opacity-70" />
                       الغرف
                     </DropdownMenuItem>
                   </>
                 )}
+                <DropdownMenuSeparator />
 
                 <DropdownMenuItem
                   onClick={() => logout()}
                   className="hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
+                  <LogOut className="w-4 h-4 opacity-80" />
                   تسجيل الخروج
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -107,7 +116,10 @@ const Navbar = () => {
         </div>
 
         {!loading && !isAuthenticated && (
-          <Link href="/auth" className="">
+          <Link
+            href="/auth"
+            className="dark:bg-white dark:text-black text-white bg-black text-sm py-1 px-3 rounded-lg"
+          >
             تسجيل الدخول
           </Link>
         )}

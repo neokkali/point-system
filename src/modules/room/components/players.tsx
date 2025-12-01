@@ -130,20 +130,18 @@ export default function Players({ roomId }: RoomPageProps) {
         <CardTitle>إدارة اللاعبين للغرفة</CardTitle>
         {players.length > 0 && (
           <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary"
             onClick={() => handleCopyPoints(players)}
           >
             {isCopied ? (
               <>
                 <Check className="w-4 h-4 text-green-500" />
-                تم النسخ
               </>
             ) : (
               <>
                 <Copy className="w-4 h-4 mb-0.5" />
-                نسخ النقاط
               </>
             )}
           </Button>
