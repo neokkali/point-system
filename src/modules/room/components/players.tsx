@@ -9,7 +9,7 @@ import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
 import { useAuth } from "@/providers/auth-provider";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ClearRoomButton from "./clear-room-button";
@@ -187,9 +187,21 @@ export default function Players({ roomId }: RoomPageProps) {
             onClick={handleSave}
             disabled={updateMutation.isPending}
           >
-            {updateMutation.isPending ? "جاري الحفظ..." : "حفظ التغييرات"}
+            {updateMutation.isPending ? (
+              <>
+                جاري حفظ التغييرات
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </>
+            ) : (
+              <>حفظ التغييرات</>
+            )}
           </Button>
-          {isAuthenticated && isAdmin && <ClearRoomButton roomId={roomId} />}
+          {players.length > 2 && (
+            <ClearRoomButton
+              roomId={roomId}
+              disabled={updateMutation.isPending}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

@@ -11,7 +11,15 @@ import {
 import { useClearRoom } from "@/hooks/use-clear-room";
 import { useState } from "react";
 
-export default function ClearRoomButton({ roomId }: { roomId: string }) {
+interface ClearRoomButtonProps {
+  roomId: string;
+  disabled: boolean;
+}
+
+export default function ClearRoomButton({
+  roomId,
+  disabled,
+}: ClearRoomButtonProps) {
   const [open, setOpen] = useState(false);
   const clearRoomMutation = useClearRoom(roomId);
 
@@ -35,14 +43,14 @@ export default function ClearRoomButton({ roomId }: { roomId: string }) {
             الإجراء لا يمكن التراجع عنه.
           </DialogDescription>
         </AlertDialogHeader>
-        <DialogFooter className="flex justify-start gap-2" dir="rtl">
+        <DialogFooter className="flex justify-start! gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>
             إلغاء
           </Button>
           <Button
             variant="destructive"
             onClick={handleClear}
-            disabled={clearRoomMutation.isPending}
+            disabled={clearRoomMutation.isPending || disabled}
           >
             {clearRoomMutation.isPending ? "جارٍ الحذف..." : "حذف"}
           </Button>
