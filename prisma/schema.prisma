@@ -14,6 +14,8 @@ enum Role {
   USER
 }
 
+
+
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
@@ -21,7 +23,7 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
-  players   Player[]  // العلاقة باللاعبين
+  players   Player[]
 }
 
 // ------------------ 2. الغرف ------------------
@@ -50,19 +52,22 @@ model Player {
 
   roomScores PlayerRoomScore[]
 
-  @@unique([username, userId]) // اللاعب لا يتكرر عند نفس المشرف
+  // تمت إزالة unique هنا
 }
 
 // ------------------ 4. سجل النقاط لكل غرفة ------------------
 model PlayerRoomScore {
-  playerId String
-  roomId   String
-  totalScore Int @default(0)
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  playerId    String
+  roomId      String
+  totalScore  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   player Player @relation(fields: [playerId], references: [id])
   room   Room   @relation(fields: [roomId], references: [id])
 
-  @@id([playerId, roomId])
-  @@index([roomId, totalScore])
+  // 📌 هذا الشرط الجديد يضمن ما يلي:
+  // لا يمكن لنفس المشرف أن يضيف نفس الاسم في نفس الغرفة
+  @@unique([playerId, roomId])
 }

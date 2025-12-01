@@ -23,33 +23,33 @@ export async function POST(
         async (p: { id?: string; username: string; points: number }) => {
           let player;
 
-          // ------------ 1) إن كان معه ID → تحديث  ------------
+          // ----------------------------------------------------
+          // 1) تحديث لاعب موجود (بشرط أن يكون للمشرف نفسه)
+          // ----------------------------------------------------
           if (p.id) {
-            const updatedCount = await prisma.player.updateMany({
-              where: { id: p.id, userId: user.userId }, // اللاعب ملك للمشرف فقط
+            const updated = await prisma.player.updateMany({
+              where: { id: p.id, userId: user.userId },
               data: { username: p.username },
             });
 
-            if (updatedCount.count === 0) {
-              throw new Error(`لا يمكن تعديل اللاعب ${p.id} لأنه ليس ملكك`);
+            if (updated.count === 0) {
+              throw new Error(`لا يمكن تعديل اللاعب لأنه ليس ملكك`);
             }
 
             player = await prisma.player.findUnique({ where: { id: p.id } });
           }
 
-          // ------------ 2) إن لم يكن معه ID → نبحث أو ننشئ  ------------
+          // ----------------------------------------------------
+          // 2) البحث عن لاعب بنفس الاسم لنفس المشرف - إن لم يوجد ننشئه
+          // ----------------------------------------------------
           else {
-            // نبحث عن لاعب بنفس الاسم لنفس المشرف
-            player = await prisma.player.findUnique({
+            player = await prisma.player.findFirst({
               where: {
-                username_userId: {
-                  username: p.username,
-                  userId: user.userId,
-                },
+                username: p.username,
+                userId: user.userId,
               },
             });
 
-            // إن لم يوجد → أنشئه
             if (!player) {
               player = await prisma.player.create({
                 data: {
@@ -60,7 +60,9 @@ export async function POST(
             }
           }
 
-          // ------------ 3) إضافة / تحديث النقاط في الغرفة  ------------
+          // ----------------------------------------------------
+          // 3) إضافة أو تحديث النقاط في الغرفة
+          // ----------------------------------------------------
           await prisma.playerRoomScore.upsert({
             where: {
               playerId_roomId: {
@@ -155,14 +157,22 @@ export async function GET(
   const playerScores = await prisma.playerRoomScore.findMany({
     where: {
       roomId,
-      player: { userId: user.userId }, // فقط لاعبين هذا المشرف
+      player: { userId: user.userId },
     },
-    include: { player: true },
+    select: {
+      totalScore: true,
+      player: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+    },
     orderBy: { totalScore: "desc" },
   });
 
   const players = playerScores.map((ps) => ({
-    id: ps.playerId,
+    id: ps.player.id,
     username: ps.player.username,
     totalScore: ps.totalScore,
   }));
