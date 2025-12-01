@@ -2,7 +2,8 @@
 
 import { useCurrentUser } from "@/hooks/use-current-user";
 import api from "@/lib/axiosClient";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, ReactNode, useContext, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -24,28 +25,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const queryClient = useQueryClient();
 
   const { data: user, isLoading, refetch } = useCurrentUser();
 
-  // تجاهل صفحة /auth
-  const isAuthPage =
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/auth");
+  const isAuthPage = pathname.startsWith("/auth");
 
   useEffect(() => {
-    if (isAuthPage) return;
-    refetch(); // تحديث المستخدم عند التنقل
-  }, [router, isAuthPage, refetch]);
+    if (!isAuthPage) refetch();
+  }, [pathname]);
 
-  const login = () => {
-    // بعد تسجيل الدخول جلب بيانات /auth/me من السيرفر
-    refetch();
-  };
+  const login = () => refetch();
 
   const logout = async () => {
     await api.post("/auth/logout");
+
+    queryClient.removeQueries({ queryKey: ["current-user"] });
+    await refetch(); // user = null
+
     router.push("/auth");
-    router.refresh();
     toast.success("تم تسجيل الخروج بنجاح");
   };
 

@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export function useCurrentUser() {
   return useQuery({
-    queryKey: ["currentUser"],
+    queryKey: ["current-user"],
     queryFn: async () => {
       const res = await api.get("/auth/me");
       return res.data.user ?? null;

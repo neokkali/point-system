@@ -24,7 +24,7 @@ const LoginForm = ({ setIsRegister }: Props) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setLoading(true);
@@ -51,7 +51,7 @@ const LoginForm = ({ setIsRegister }: Props) => {
   return (
     <div className="w-full max-w-md p-8 rounded-xl shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center">تسجيل الدخول</h2>
-      <form onSubmit={handleRegister}>
+      <form onSubmit={handleLogin}>
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="username">أسم المستخدم</FieldLabel>
