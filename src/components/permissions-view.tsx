@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { DotLoader } from "./app-loader";
 
 type User = {
   id: string;
@@ -54,12 +55,13 @@ export default function PermissionsView() {
     },
   });
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-60">
-        <Loader2 className="animate-spin" />
+      <div className="h-[80vh] flex flex-col justify-center items-center">
+        <DotLoader size="lg" text="جاري التحميل" color="primary" />
       </div>
     );
+  }
 
   return (
     <div className="max-w-5xl mx-auto mt-10 space-y-6">

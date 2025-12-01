@@ -1,5 +1,6 @@
 "use client";
 
+import { DotLoader } from "@/components/app-loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
 import { useAuth } from "@/providers/auth-provider";
-import { Check, Copy, Loader2 } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ClearRoomButton from "./clear-room-button";
@@ -108,12 +109,13 @@ export default function Players({ roomId }: RoomPageProps) {
     }, 2000);
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="animate-spin" />
+      <div className="h-[80vh] flex flex-col justify-center items-center">
+        <DotLoader size="lg" text="جاري التحميل" color="primary" />
       </div>
     );
+  }
 
   if (error)
     return (

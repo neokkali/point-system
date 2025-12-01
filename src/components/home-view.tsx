@@ -4,9 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGlobalScores } from "@/hooks/use-global-scores";
-import { Check, Copy, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Check, Copy, Crown, Trophy, Users } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { DotLoader } from "./app-loader";
 
 // ---------------------- Types ----------------------
 type Player = {
@@ -21,157 +23,189 @@ type Room = {
   players: Player[];
 };
 
-// ---------------------- Component ----------------------
 export default function HomeView() {
   const [isCopied, setIsCopied] = useState<{ [roomId: string]: boolean }>({});
   const { data, isLoading, error } = useGlobalScores();
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-6">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center text-red-500 p-6">
-        حدث خطأ أثناء تحميل النقاط
-      </div>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <div className="text-center text-gray-500 p-6">
-        لا توجد نقاط الملك حاليا في أي غرفة
-      </div>
-    );
-  }
-
-  // ---------------------- Function to copy points ----------------------
+  // ---------------------- Helper: Copy Function ----------------------
   const handleCopyPoints = (roomId: string, players: Player[]) => {
     const sortedPlayers = [...players].sort(
       (a, b) => b.totalScore - a.totalScore
     );
-    if (sortedPlayers.length === 0) {
-      toast.error("لا يوجد نقاط لنسخها!");
-      return;
-    }
+    if (!sortedPlayers.length) return;
+
     const formatted = sortedPlayers
-      .map((p) => `${p.username}: ${p.totalScore}`)
-      .join(" | ");
+      .map((p, i) => `${i + 1}. ${p.username}: ${p.totalScore}`)
+      .join("\n");
+
     navigator.clipboard.writeText(formatted);
     setIsCopied((prev) => ({ ...prev, [roomId]: true }));
-    setTimeout(() => {
-      setIsCopied((prev) => ({ ...prev, [roomId]: false }));
-    }, 2000);
+    setTimeout(
+      () => setIsCopied((prev) => ({ ...prev, [roomId]: false })),
+      2000
+    );
   };
 
-  // تحقق هل كل الغرف فارغة
-  const allRoomsEmpty = data.every((room: Room) => room.players.length === 0);
-
-  if (allRoomsEmpty) {
+  // ---------------------- States ----------------------
+  if (isLoading) {
     return (
-      <div className="text-center text-gray-500 p-6 text-xl font-semibold">
-        لا توجد نقاط الملك حاليا في أي غرفة
+      <div className="h-[80vh] flex flex-col justify-center items-center">
+        <DotLoader size="lg" text="جاري التحميل" color="primary" />
       </div>
     );
   }
 
+  if (error)
+    return (
+      <div className="text-center text-red-500 p-10">
+        حدث خطأ في جلب البيانات
+      </div>
+    );
+
+  const allRoomsEmpty =
+    !data ||
+    data.length === 0 ||
+    data.every((r: Room) => r.players.length === 0);
+  if (allRoomsEmpty)
+    return (
+      <div className="text-center text-muted-foreground p-10">
+        لا توجد نقاط حالياً
+      </div>
+    );
+
   return (
-    <div className="max-w-6xl mx-auto mt-8 space-y-8">
-      <h2 className="text-3xl font-bold text-center mb-6">
-        ترتيب الملوك حسب الغرف
-      </h2>
+    <div className="max-w-5xl mx-auto py-8 px-4 space-y-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <Trophy className="w-6 h-6 text-yellow-500" />
+          لوحة المتصدرين
+        </h2>
+        <span className="text-sm text-muted-foreground bg-secondary/50 px-3 py-1 rounded-full">
+          تحديث مباشر
+        </span>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         {data.map((room: Room) => {
-          if (!room.players || room.players.length === 0) {
-            return (
-              <Card
-                key={room.roomId}
-                className="border shadow-sm dark:border-gray-700"
-              >
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold">
-                    {room.roomName}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center text-gray-500 font-medium">
-                  لا يوجد نقاط في هذه الغرفة
-                </CardContent>
-              </Card>
-            );
-          }
-
-          const maxScore = Math.max(...room.players.map((p) => p.totalScore));
+          const hasPlayers = room.players?.length > 0;
+          const sortedPlayers = [...(room.players || [])].sort(
+            (a, b) => b.totalScore - a.totalScore
+          );
+          const maxScore = sortedPlayers[0]?.totalScore || 1;
 
           return (
-            <Card
+            <motion.div
               key={room.roomId}
-              className="border shadow-sm dark:border-gray-700"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <CardHeader className="flex justify-between items-center">
-                <CardTitle className="text-lg font-bold">
-                  {room.roomName}
-                </CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                  onClick={() => handleCopyPoints(room.roomId, room.players)}
-                >
-                  {isCopied[room.roomId] ? (
-                    <>
-                      <Check className="w-4 h-4 text-green-500" />
-                      تم النسخ
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 mb-0.5" />
-                      نسخ النقاط
-                    </>
-                  )}
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {room.players
-                  .slice()
-                  .sort((a, b) => b.totalScore - a.totalScore)
-                  .map((player, idx) => {
-                    const isKing = player.totalScore === maxScore;
-                    const progressPercent = Math.min(
-                      (player.totalScore / maxScore) * 100,
-                      100
-                    );
-
-                    return (
-                      <div
-                        key={`${player.username}-${idx}`}
-                        className="space-y-1"
+              <Card className="h-full border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 bg-card/50 backdrop-blur-sm overflow-hidden">
+                {/* Compact Header */}
+                <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0 border-b border-border/40 bg-muted/20">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base font-bold truncate max-w-[150px] sm:max-w-[200px]">
+                        {room.roomName}
+                      </CardTitle>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-5 px-1.5 font-normal text-muted-foreground"
                       >
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold">{player.username}</span>
-                          {isKing && (
-                            <Badge variant="destructive">الملك 👑</Badge>
-                          )}
-                          <span className="text-gray-600 dark:text-gray-300 font-medium">
-                            {player.totalScore} نقطة
-                          </span>
+                        {room.roomType === "QUIZ" ? "مسابقة" : "مقال"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {hasPlayers && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() =>
+                        handleCopyPoints(room.roomId, room.players)
+                      }
+                    >
+                      {isCopied[room.roomId] ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  )}
+                </CardHeader>
+
+                {/* Compact Content */}
+                <CardContent className="p-4 pt-3 space-y-3">
+                  {!hasPlayers ? (
+                    <div className="text-center py-6 text-sm text-muted-foreground flex flex-col items-center gap-2 opacity-60">
+                      <Users className="w-8 h-8 stroke-1" />
+                      <span>الغرفة فارغة</span>
+                    </div>
+                  ) : (
+                    sortedPlayers.map((player, idx) => {
+                      const rank = idx + 1;
+                      const isFirst = rank === 1;
+                      const progress = (player.totalScore / maxScore) * 100;
+
+                      return (
+                        <div key={idx} className="group relative">
+                          <div className="flex justify-between items-center text-sm mb-1.5 z-10 relative">
+                            <div className="flex items-center gap-3">
+                              {/* Rank Indicator */}
+                              <div
+                                className={cn(
+                                  "w-5 text-center font-bold text-xs",
+                                  isFirst
+                                    ? "text-yellow-500"
+                                    : rank === 2
+                                    ? "text-slate-400"
+                                    : rank === 3
+                                    ? "text-amber-700"
+                                    : "text-muted-foreground"
+                                )}
+                              >
+                                {isFirst ? (
+                                  <Crown className="w-4 h-4 inline" />
+                                ) : (
+                                  `#${rank}`
+                                )}
+                              </div>
+
+                              <span
+                                className={cn(
+                                  "font-medium truncate max-w-[120px]",
+                                  isFirst && "text-primary font-bold"
+                                )}
+                              >
+                                {player.username}
+                              </span>
+                            </div>
+
+                            <span className="font-mono text-xs font-semibold bg-secondary px-2 py-0.5 rounded text-secondary-foreground">
+                              {player.totalScore}
+                            </span>
+                          </div>
+
+                          {/* Ultra Slim Progress Bar */}
+                          <div className="h-1 w-full bg-secondary/30 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progress}%` }}
+                              transition={{ duration: 0.8, ease: "easeOut" }}
+                              className={cn(
+                                "h-full rounded-full",
+                                isFirst ? "bg-yellow-500" : "bg-primary/70"
+                              )}
+                            />
+                          </div>
                         </div>
-                        <div className="h-1 w-full bg-gray-200 dark:bg-gray-700 rounded-full relative">
-                          <div
-                            className="h-1 bg-black/50 dark:bg-red-400 rounded-full transition-all duration-300"
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-              </CardContent>
-            </Card>
+                      );
+                    })
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           );
         })}
       </div>

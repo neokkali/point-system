@@ -4,8 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/lib/axiosClient";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import { DotLoader } from "./app-loader";
 
 type RoomScore = {
   totalScore: number;
@@ -49,12 +50,13 @@ export default function SuperScores() {
     setExpandedRooms((prev) => ({ ...prev, [roomId]: !prev[roomId] }));
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="flex justify-center p-10">
-        <Loader2 className="animate-spin w-8 h-8" />
+      <div className="h-[80vh] flex flex-col justify-center items-center">
+        <DotLoader size="lg" text="جاري التحميل" color="primary" />
       </div>
     );
+  }
 
   if (isError)
     return (
