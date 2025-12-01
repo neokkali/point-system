@@ -4,13 +4,13 @@ import { NextResponse } from "next/server";
 
 const allowedRoles = ["ADMIN", "MODERATOR"];
 
-// ------------------- POST: إضافة/تحديث اللاعبين -------------------
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ roomId: string }> }
 ) {
   const { roomId } = await params;
   const user = await getUserFromAuth();
+
   if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
   if (!allowedRoles.includes(user.role))
     return NextResponse.json({ error: "غير مصرح بالدخول" }, { status: 403 });
@@ -23,30 +23,57 @@ export async function POST(
         async (p: { id?: string; username: string; points: number }) => {
           let player;
 
+          // ------------ 1) إن كان معه ID → تحديث  ------------
           if (p.id) {
-            // تحديث اللاعب فقط إذا يخص المشرف
             const updatedCount = await prisma.player.updateMany({
-              where: { id: p.id, userId: user.userId },
+              where: { id: p.id, userId: user.userId }, // اللاعب ملك للمشرف فقط
               data: { username: p.username },
             });
 
             if (updatedCount.count === 0) {
-              throw new Error(`لا يمكن تعديل اللاعب ${p.id} ليس ملكك`);
+              throw new Error(`لا يمكن تعديل اللاعب ${p.id} لأنه ليس ملكك`);
             }
 
             player = await prisma.player.findUnique({ where: { id: p.id } });
-          } else {
-            // إنشاء لاعب جديد مرتبط بالمشرف
-            player = await prisma.player.create({
-              data: { username: p.username, userId: user.userId },
-            });
           }
 
-          // إضافة أو تحديث النقاط في الغرفة
+          // ------------ 2) إن لم يكن معه ID → نبحث أو ننشئ  ------------
+          else {
+            // نبحث عن لاعب بنفس الاسم لنفس المشرف
+            player = await prisma.player.findUnique({
+              where: {
+                username_userId: {
+                  username: p.username,
+                  userId: user.userId,
+                },
+              },
+            });
+
+            // إن لم يوجد → أنشئه
+            if (!player) {
+              player = await prisma.player.create({
+                data: {
+                  username: p.username,
+                  userId: user.userId,
+                },
+              });
+            }
+          }
+
+          // ------------ 3) إضافة / تحديث النقاط في الغرفة  ------------
           await prisma.playerRoomScore.upsert({
-            where: { playerId_roomId: { playerId: player!.id, roomId } },
+            where: {
+              playerId_roomId: {
+                playerId: player!.id,
+                roomId,
+              },
+            },
             update: { totalScore: p.points },
-            create: { playerId: player!.id, roomId, totalScore: p.points },
+            create: {
+              playerId: player!.id,
+              roomId,
+              totalScore: p.points,
+            },
           });
         }
       )
@@ -54,9 +81,64 @@ export async function POST(
 
     return NextResponse.json({ message: "تم تحديث اللاعبين بنجاح" });
   } catch (err) {
+    console.error("ERR:", err);
     return NextResponse.json({ error: err || "فشل التحديث" }, { status: 500 });
   }
 }
+
+// ------------------- POST: إضافة/تحديث اللاعبين -------------------
+// export async function POST(
+//   req: Request,
+//   { params }: { params: Promise<{ roomId: string }> }
+// ) {
+//   const { roomId } = await params;
+//   const user = await getUserFromAuth();
+//   if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+//   if (!allowedRoles.includes(user.role))
+//     return NextResponse.json({ error: "غير مصرح بالدخول" }, { status: 403 });
+
+//   try {
+//     const { players } = await req.json();
+
+//     await Promise.all(
+//       players.map(
+//         async (p: { id?: string; username: string; points: number }) => {
+//           let player;
+
+//           if (p.id) {
+//             // تحديث اللاعب فقط إذا يخص المشرف
+//             const updatedCount = await prisma.player.updateMany({
+//               where: { id: p.id, userId: user.userId },
+//               data: { username: p.username },
+//             });
+
+//             if (updatedCount.count === 0) {
+//               throw new Error(`لا يمكن تعديل اللاعب ${p.id} ليس ملكك`);
+//             }
+
+//             player = await prisma.player.findUnique({ where: { id: p.id } });
+//           } else {
+//             // إنشاء لاعب جديد مرتبط بالمشرف
+//             player = await prisma.player.create({
+//               data: { username: p.username, userId: user.userId },
+//             });
+//           }
+
+//           // إضافة أو تحديث النقاط في الغرفة
+//           await prisma.playerRoomScore.upsert({
+//             where: { playerId_roomId: { playerId: player!.id, roomId } },
+//             update: { totalScore: p.points },
+//             create: { playerId: player!.id, roomId, totalScore: p.points },
+//           });
+//         }
+//       )
+//     );
+
+//     return NextResponse.json({ message: "تم تحديث اللاعبين بنجاح" });
+//   } catch (err) {
+//     return NextResponse.json({ error: err || "فشل التحديث" }, { status: 500 });
+//   }
+// }
 
 // ------------------- GET: جلب اللاعبين لمشرف محدد -------------------
 export async function GET(
