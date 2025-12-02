@@ -29,7 +29,7 @@ const Navbar = () => {
 
   const sliceUsername = (username: string) => {
     if (!username) return "User";
-    return username.length <= 8 ? username : username.slice(0, 8) + "...";
+    return username.length <= 5 ? username : username.slice(0, 5) + "...";
   };
 
   return (
@@ -83,9 +83,9 @@ const Navbar = () => {
                       <PlusCircle className="w-4 h-4 opacity-70" />
                       الغرف
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                   </>
                 )}
-                <DropdownMenuSeparator />
 
                 <DropdownMenuItem
                   onClick={() => logout()}
