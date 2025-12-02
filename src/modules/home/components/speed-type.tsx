@@ -216,7 +216,7 @@ export default function SpeedType({
         <span
           key={idx}
           className={cn(
-            "text-xl md:text-2xl leading-relaxed transition-colors duration-75 inline align-text-bottom",
+            "text-xl md:text-2xl leading-relaxed transition-colors duration-75",
             colorClass,
             cursorClass
           )}
@@ -229,9 +229,7 @@ export default function SpeedType({
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <h1 className="text-xl md:text-3xl font-bold text-center">
-        مدرب الطباعة
-      </h1>
+      <h1 className="text-xl md:text3xl text-center">مدرب الطباعة</h1>
       <div className="w-full max-w-4xl mx-auto mb-8" dir="rtl">
         {isFinished ? (
           <motion.div
@@ -329,7 +327,6 @@ export default function SpeedType({
                   onChange={handleInputChange}
                   autoComplete="off"
                   autoCorrect="off"
-                  autoCapitalize="off"
                   spellCheck={false}
                   aria-label="أدخل النص هنا"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-text"
