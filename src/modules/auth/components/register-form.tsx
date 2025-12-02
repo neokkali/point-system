@@ -17,21 +17,24 @@ const RegisterForm = ({ setIsRegister }: Props) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) return;
 
     setLoading(true);
-    // Handle registration logic here
     try {
       await api.post("/auth/register", { username, password });
       toast.success("تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول");
     } catch (error: AxiosError | unknown) {
       if (error instanceof AxiosError) {
         console.error("Registration error:", error.message);
+        toast.success(
+          error.response?.data.message || "حدث خطأ اثناء تسجيل الحساب",
+        );
       } else {
-        console.error("An unexpected error occurred:", error);
+        console.log("An unexpected error occurred:", error);
       }
     } finally {
       setLoading(false);
@@ -80,11 +83,11 @@ const RegisterForm = ({ setIsRegister }: Props) => {
               required
             />
           </Field>
-          {password !== confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">
-              كلمة المرور وتأكيدها غير متطابقين
-            </p>
-          )}
+          {/* {password !== confirmPassword && ( */}
+          {/*   <p className="text-red-500 text-sm mt-1"> */}
+          {/*     كلمة المرور وتأكيدها غير متطابقين */}
+          {/*   </p> */}
+          {/* )} */}
 
           <div className="flex flex-col justify-between">
             <Button

@@ -8,7 +8,6 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
-import { useAuth } from "@/providers/auth-provider";
 import { Check, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -34,8 +33,8 @@ export default function Players({ roomId }: RoomPageProps) {
   useAuthGuard(["ADMIN", "MODERATOR"], "/auth", "/");
   const [isCopied, setIsCopied] = useState(false);
 
-  const { user, isAuthenticated } = useAuth();
-  const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
+  // const { user, isAuthenticated } = useAuth();
+  // const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
 
   const { data: players, isLoading, error } = usePlayers(roomId);
   const deleteMutation = useDeletePlayer(roomId);
@@ -73,6 +72,7 @@ export default function Players({ roomId }: RoomPageProps) {
 
   const addNewRow = () =>
     setNewPlayers((prev) => [...prev, { username: "", points: "" }]);
+
   const removeRow = (index: number) =>
     setNewPlayers((prev) => prev.filter((_, i) => i !== index));
 
