@@ -1,5 +1,6 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRooms } from "@/hooks/use-rooms";
 import { usePathname, useRouter } from "next/navigation";
@@ -29,7 +30,12 @@ const TabNavigation = () => {
     }
   }, [rooms, currentRoomId, router]);
 
-  if (isLoading) return <div></div>;
+  if (isLoading)
+    return (
+      <div className="max-w-3xl mx-auto mt-6">
+        <Skeleton className="h-10 w-full mb-4 rounded-lg" />
+      </div>
+    );
   if (error) return <div>حدث خطأ أثناء جلب الغرف</div>;
   if (!rooms.length) return <div>لا توجد غرف</div>;
 
