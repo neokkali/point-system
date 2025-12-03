@@ -41,7 +41,7 @@ type UserSupervisor = {
  * Helper: ترجمة/عرض نص الدور (قابل للتعديل لاحقاً)
  */
 const userRoles: Record<string, string> = {
-  ADMIN: "مدير النظام",
+  ADMIN: "مشرف",
   MODERATOR: "مشرف",
   USER: "مستخدم",
 };
@@ -53,7 +53,7 @@ const calculateSupervisorTotalScore = (supervisor: UserSupervisor) => {
   return supervisor.players.reduce((supTotal, player) => {
     const playerTotal = player.roomScores.reduce(
       (pTotal, rs) => pTotal + rs.totalScore,
-      0
+      0,
     );
     return supTotal + playerTotal;
   }, 0);
@@ -66,7 +66,7 @@ const calculateSupervisorTotalScore = (supervisor: UserSupervisor) => {
 const renderSupervisorRooms = (
   sup: UserSupervisor,
   expandedRooms: Record<string, boolean>,
-  toggleRoom: (supervisorId: string, roomId: string) => void
+  toggleRoom: (supervisorId: string, roomId: string) => void,
 ) => {
   const roomsMap: Record<
     string,
@@ -173,14 +173,14 @@ export default function SuperScores() {
       // ترتيب المشرفين تنازلي حسب نقاطهم الإجمالية
       return supervisors.sort(
         (a: UserSupervisor, b: UserSupervisor) =>
-          calculateSupervisorTotalScore(b) - calculateSupervisorTotalScore(a)
+          calculateSupervisorTotalScore(b) - calculateSupervisorTotalScore(a),
       );
     },
     refetchInterval: 5000, // تحديث تلقائي
   });
 
   const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>(
-    {}
+    {},
   );
 
   const toggleRoom = (supervisorId: string, roomId: string) => {
