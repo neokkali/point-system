@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ScorePayload {
   wpm: number;
-  accuracy: number;
 }
 
 export const useSubmitScore = () => {
