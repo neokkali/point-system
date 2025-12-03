@@ -109,6 +109,15 @@ const Navbar = () => {
           >
             الرئيسية
           </Link>
+          <Link
+            href="/typing-speed"
+            className={cn(
+              "text-base md:text-lg",
+              pathname === "/typing-speed" ? "font-bold" : "font-normal"
+            )}
+          >
+            مدرب الطباعة
+          </Link>
 
           {!loading && isAuthenticated && (isAdmin || isModerator) && (
             <Link

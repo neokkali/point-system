@@ -175,7 +175,7 @@ export default function SpeedType({
         <span
           key={idx}
           className={cn(
-            "text-xl md:text-2xl leading-relaxed transition-colors duration-75",
+            "text-xl md:text-3xl leading-relaxed transition-colors duration-75",
             colorClass,
             cursorClass
           )}
@@ -187,9 +187,11 @@ export default function SpeedType({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <h1 className="text-xl md:text3xl text-center">مدرب الطباعة</h1>
-      <div className="w-full max-w-4xl mx-auto mb-8" dir="rtl">
+    <div className="mt-5">
+      <h1 className="text-xl md:text-3xl font-bold text-center">
+        مدرب الطباعة
+      </h1>
+      <div className="w-full max-w-7xl mx-auto mb-8" dir="rtl">
         {isFinished ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -217,7 +219,7 @@ export default function SpeedType({
             </div>
             <div className="text-center space-y-6">
               <p className="text-slate-400 text-lg">
-                {stats.wpm > 40
+                {stats.wpm > 80
                   ? "أداء ممتاز! 🚀"
                   : "محاولة جيدة! استمر في التدريب 💪"}
               </p>
@@ -233,10 +235,10 @@ export default function SpeedType({
         ) : (
           <Card className="border-none shadow-none bg-transparent">
             <CardContent className="p-0 space-y-6">
-              <div className="flex items-center justify-between px-4 py-2 w-fit mx-auto md:w-full md:mx-0">
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl font-bold text-primary flex items-center gap-2">
-                    <Timer className="w-6 h-6" />
+              <div className="flex items-center justify-between px-4 py-2  w-fit mx-auto md:w-full md:mx-0">
+                <div className="flex items-center gap-2">
+                  <div className="text-2xl font-bold text-primary flex items-center gap-1">
+                    <Timer className="w-7 h-7 mb-2" />
                     <span>{timeLeft}</span>
                   </div>
                   <span className="text-xs text-muted-foreground hidden md:inline">
