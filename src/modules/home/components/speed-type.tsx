@@ -147,7 +147,7 @@ export default function SpeedType({
 
       submittedRef.current = true;
       submitScore.mutate(
-        { wpm: result.wpm, accuracy: result.accuracy },
+        { wpm: result.wpm },
         {
           onSuccess: () => {},
           onError: () => {
