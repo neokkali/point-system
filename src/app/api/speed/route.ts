@@ -8,8 +8,15 @@ export async function POST(req: Request) {
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { wpm } = await req.json();
   const userId = user.userId;
+  const { wpm } = await req.json();
+
+  if (user.wpm && wpm <= user.wpm) {
+    return NextResponse.json(
+      { message: "لديك نفس النتيجه او نتيجه سابقة اصغر" },
+      { status: 200 }
+    );
+  }
 
   // جلب أفضل 10 لاعبين
   const topScores = await prisma.globalScore.findMany({

@@ -7,6 +7,7 @@ export type UserPayload = {
   userId: string;
   username: string;
   role: "ADMIN" | "MODERATOR" | "USER";
+  wpm?: number;
 };
 
 const getUserFromAuth = async (): Promise<UserPayload | null> => {
@@ -26,6 +27,11 @@ const getUserFromAuth = async (): Promise<UserPayload | null> => {
         id: true,
         username: true,
         role: true,
+        globalScore: {
+          select: {
+            wpm: true,
+          },
+        },
       },
     });
 
@@ -36,6 +42,7 @@ const getUserFromAuth = async (): Promise<UserPayload | null> => {
       userId: user.id,
       username: user.username,
       role: user.role,
+      wpm: user.globalScore?.wpm,
     };
   } catch {
     // console.error("getUserFromAuth error:", err);
