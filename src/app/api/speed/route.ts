@@ -1,54 +1,67 @@
 // api/speed/route.ts
-
 import { prisma } from "@/lib/priams";
 import getUserFromAuth from "@/lib/user-auth";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const user = await getUserFromAuth();
-  if (!user) return new Response("Unauthorized", { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { wpm } = await req.json();
-
   const userId = user.userId;
 
-  // تحقق إذا كان ضمن العشرة الأوائل
+  // جلب أفضل 10 لاعبين
   const topScores = await prisma.globalScore.findMany({
     orderBy: { wpm: "desc" },
     take: 10,
+    include: {
+      user: {
+        select: { id: true, username: true, role: true, createdAt: true }, // استبعاد كلمة المرور
+      },
+    },
   });
 
   const minTopWpm =
     topScores.length < 10 ? 0 : topScores[topScores.length - 1].wpm;
 
   if (wpm < minTopWpm) {
-    return new Response("Not in top 10", { status: 200 });
+    return NextResponse.json({ message: "Not in top 10" }, { status: 200 });
   }
 
   // تحديث أو إنشاء سجل اللاعب
   const updated = await prisma.globalScore.upsert({
     where: { userId },
-    update: { wpm: wpm, totalScore: wpm }, // يمكن تعديل حسب الصيغة
+    update: { wpm, totalScore: wpm },
     create: { userId, wpm, totalScore: wpm },
+    include: {
+      user: {
+        select: { id: true, username: true, role: true, createdAt: true },
+      },
+    },
   });
 
-  return new Response(
-    JSON.stringify({
-      topScores: [...topScores, updated]
-        .sort((a, b) => b.wpm - a.wpm)
-        .slice(0, 10),
-    }),
-    {
-      status: 200,
-    }
-  );
+  // إعادة أفضل 10 لاعبين بعد التحديث
+  const updatedTopScores = [
+    ...topScores.filter((s) => s.userId !== userId),
+    updated,
+  ]
+    .sort((a, b) => b.wpm - a.wpm)
+    .slice(0, 10);
+
+  return NextResponse.json({ topScores: updatedTopScores });
 }
 
 export async function GET() {
   const topScores = await prisma.globalScore.findMany({
     orderBy: { wpm: "desc" },
     take: 10,
-    include: { user: true },
+    include: {
+      user: {
+        select: { id: true, username: true, role: true, createdAt: true }, // استبعاد كلمة المرور
+      },
+    },
   });
 
-  return new Response(JSON.stringify({ topScores }), { status: 200 });
+  return NextResponse.json({ topScores });
 }
