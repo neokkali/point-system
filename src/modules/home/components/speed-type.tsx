@@ -8,13 +8,15 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { motion } from "framer-motion";
 import { RefreshCcw, Timer, Trophy, Zap } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 // --- Helpers ---
 const getGraphemes = (s: string): string[] => {
   if (!s) return [];
   const SegmenterCtor = (
-    Intl as unknown as { Segmenter?: typeof Intl.Segmenter }
+    Intl as unknown as {
+      Segmenter?: typeof Intl.Segmenter;
+    }
   ).Segmenter;
   if (typeof SegmenterCtor === "function") {
     const seg = new SegmenterCtor(undefined, { granularity: "grapheme" });
@@ -37,35 +39,40 @@ const normalizeArabicText = (str: string): string => {
   return removedMarks;
 };
 
-const GAME_DURATION = 60;
+const GAME_DURATION = 60; // seconds
 const WORDS_PER_GAME = 60;
 
-export default function SpeedType({ duration = GAME_DURATION }) {
-  const [text, setText] = useState("");
-  const [userInput, setUserInput] = useState("");
-  const [timeLeft, setTimeLeft] = useState(duration);
-  const [isActive, setIsActive] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
-  const [stats, setStats] = useState({ wpm: 0, accuracy: 0 });
+export default function SpeedType({
+  duration = GAME_DURATION,
+}: {
+  duration?: number;
+}) {
+  const [text, setText] = useState<string>("");
+  const [userInput, setUserInput] = useState<string>("");
+  const [timeLeft, setTimeLeft] = useState<number>(duration);
+  const [isActive, setIsActive] = useState<boolean>(false);
+  const [isFinished, setIsFinished] = useState<boolean>(false);
+  const [stats, setStats] = useState<{ wpm: number; accuracy: number }>({
+    wpm: 0,
+    accuracy: 0,
+  });
 
-  const [lastBestWpm, setLastBestWpm] = useState(0);
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // startTimeRef: لتسجيل وقت البداية بدقة (milliseconds)
-  const startTimeRef = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const startTimeRef = useRef<number | null>(null); // ms
+  const rafRef = useRef<number | null>(null);
+  const submittedRef = useRef<boolean>(false); // تأمين إرسال واحد فقط
 
   const { isAuthenticated } = useAuth();
   const submitScore = useSubmitScore();
 
   useEffect(() => {
     setText(getRandomText());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function getRandomText() {
-    const words = articleText.split(/\s+/);
+  function getRandomText(): string {
+    const words = articleText.split(/\s+/).filter(Boolean);
     if (words.length <= WORDS_PER_GAME) return articleText.trim();
-
     const startIndex = Math.floor(
       Math.random() * (words.length - WORDS_PER_GAME)
     );
@@ -76,91 +83,118 @@ export default function SpeedType({ duration = GAME_DURATION }) {
   const normalizedUser = normalizeArabicText(userInput);
   const normalizedUserChars = Array.from(normalizedUser);
 
-  // دالة لحساب النتائج تستخدم زمنًا دقيقًا بواسطة startTimeRef
-  const calculateResults = useCallback(() => {
-    const totalChars = normalizedUserChars.length;
-    let correctChars = 0;
-    const expectedChars: string[] = [];
+  // --- حساب النتائج ---
+  const calculateResults = useCallback(
+    (forceElapsedSeconds?: number) => {
+      const totalChars = normalizedUserChars.length;
+      const expectedChars: string[] = [];
+      for (const g of graphemes) {
+        const base = normalizeArabicText(g);
+        if (base.length > 0) expectedChars.push(...Array.from(base));
+      }
 
-    for (const g of graphemes) {
-      const base = normalizeArabicText(g);
-      if (base.length > 0) expectedChars.push(...Array.from(base));
-    }
+      const compareLen = Math.min(totalChars, expectedChars.length);
+      let correctChars = 0;
+      for (let i = 0; i < compareLen; i++) {
+        if (normalizedUserChars[i] === expectedChars[i]) correctChars++;
+      }
 
-    for (let i = 0; i < totalChars; i++) {
-      if (normalizedUserChars[i] === expectedChars[i]) correctChars++;
-    }
+      const accuracy =
+        totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
 
-    const accuracy =
-      totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
+      let elapsedSeconds: number;
+      if (typeof forceElapsedSeconds === "number") {
+        elapsedSeconds = forceElapsedSeconds;
+      } else {
+        const now = Date.now();
+        const start = startTimeRef.current ?? now;
+        elapsedSeconds = Math.max(0, (now - start) / 1000);
+      }
 
-    // --- احسب الوقت الحقيقي منذ بداية الكتابة ---
-    const now = Date.now();
-    const start = startTimeRef.current ?? now; // إذا لم يبدأ، استخدم now (فلن يكون صفر)
-    let elapsedMs = Math.max(0, now - start); // milliseconds
+      if (elapsedSeconds < 0.5) elapsedSeconds = 0.5;
+      if (elapsedSeconds > duration) elapsedSeconds = duration;
 
-    // حد أدنى للزمن لمنع القيم الخارجة: 500ms (0.5s)
-    const minMs = 500;
-    if (elapsedMs < minMs) elapsedMs = minMs;
+      const minutes = elapsedSeconds / 60;
+      const standardWordCount = correctChars / 5;
+      const wpm = minutes > 0 ? Math.round(standardWordCount / minutes) : 0;
 
-    const elapsedSeconds = elapsedMs / 1000;
-    const elapsedMinutes = elapsedSeconds / 60;
+      return { wpm, accuracy, correctChars, elapsedSeconds };
+    },
+    [normalizedUserChars, graphemes, duration]
+  );
 
-    // wpm = (correctChars / 5) / elapsedMinutes
-    const standardWordCount = correctChars / 5;
-    const wpm =
-      elapsedMinutes > 0 ? Math.round(standardWordCount / elapsedMinutes) : 0;
+  // --- إنهاء اللعبة وإرسال النتائج ---
+  const finishGame = useCallback(
+    (forceElapsedSeconds?: number) => {
+      if (isFinished) return;
 
-    return { wpm, accuracy, elapsedSeconds };
-  }, [normalizedUserChars, graphemes]);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
 
-  // finishGame المحسّن: يحسب النتائج بدقة ويرسل مرة واحدة فقط
-  const finishGame = useCallback(() => {
-    setIsActive(false);
-    setIsFinished(true);
-    inputRef.current?.blur();
+      setIsActive(false);
+      setIsFinished(true);
+      inputRef.current?.blur();
 
-    const result = calculateResults();
-    setStats({ wpm: result.wpm, accuracy: result.accuracy });
+      const result = calculateResults(forceElapsedSeconds);
+      setStats({ wpm: result.wpm, accuracy: result.accuracy });
 
-    // لا نرسل للزائر
-    if (!isAuthenticated) return;
+      // إرسال النتائج فقط للمستخدمين المسجلين ولمرة واحدة
+      if (!isAuthenticated) return;
+      if (submittedRef.current) return;
+      if (result.wpm <= 0) return;
 
-    // تجاهل نتائج صفر
-    if (result.wpm === 0) return;
+      submittedRef.current = true;
+      submitScore.mutate(
+        { wpm: result.wpm, accuracy: result.accuracy },
+        {
+          onSuccess: () => {},
+          onError: () => {
+            submittedRef.current = false;
+          },
+        }
+      );
+    },
+    [calculateResults, isAuthenticated, isFinished, submitScore]
+  );
 
-    // إرسال فقط إذا أعلى من أفضل نتيجة
-    if (result.wpm > lastBestWpm) {
-      submitScore.mutate({
-        wpm: result.wpm,
-        accuracy: result.accuracy,
-      });
-      setLastBestWpm(result.wpm);
-    }
-  }, [calculateResults, isAuthenticated, lastBestWpm, submitScore]);
+  // --- RAF-based timer ---
+  useEffect(() => {
+    if (!isActive || isFinished) return;
+
+    if (!startTimeRef.current) startTimeRef.current = Date.now();
+
+    const tick = () => {
+      const elapsedSeconds = (Date.now() - (startTimeRef.current ?? 0)) / 1000;
+      const remaining = Math.max(0, duration - elapsedSeconds);
+      setTimeLeft(Math.ceil(remaining));
+
+      if (remaining <= 0) {
+        finishGame(duration);
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [isActive, isFinished, duration, finishGame]);
 
   useEffect(() => {
     if (!isFinished) inputRef.current?.focus();
   }, [isFinished, isActive]);
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => setTimeLeft((p) => p - 1), 1000);
-    } else if (timeLeft === 0 && isActive) {
-      finishGame();
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, timeLeft, finishGame]);
-
+  // --- عند تغيير الإدخال ---
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
-    // عند أول ضغطة تبدأ المباراة → سجل وقت البداية بدقة
     if (!isActive && !isFinished) {
       setIsActive(true);
       startTimeRef.current = Date.now();
@@ -176,25 +210,24 @@ export default function SpeedType({ duration = GAME_DURATION }) {
       return acc + (base.length > 0 ? Array.from(base).length : 0);
     }, 0);
 
-    // إذا وصل المستخدم لنهاية النص → إنهاء اللعبة
     if (normalizeArabicText(cleaned).length >= expectedBaseCount) {
-      // صغير تأخير للسماح بالرندر النهائي ثم الإنهاء
       setTimeout(() => finishGame(), 50);
     }
   };
 
   const resetGame = () => {
-    // إعادة ضبط كامل ولا نلمس أي إرسال أو منطق آخر
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    startTimeRef.current = null;
+    submittedRef.current = false;
     setText(getRandomText());
+    setUserInput("");
     setIsActive(false);
     setIsFinished(false);
     setTimeLeft(duration);
-    setUserInput("");
     setStats({ wpm: 0, accuracy: 0 });
-
-    // مسح وقت البداية
-    startTimeRef.current = null;
-
     setTimeout(() => inputRef.current?.focus(), 40);
   };
 
