@@ -375,6 +375,7 @@ export default function SpeedType({
                   autoComplete="off"
                   autoCorrect="off"
                   spellCheck={false}
+                  onPaste={(e) => e.preventDefault()}
                   aria-label="أدخل النص هنا"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-text"
                 />
