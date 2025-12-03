@@ -11,9 +11,12 @@ export async function POST(req: Request) {
   const userId = user.userId;
   const { wpm } = await req.json();
 
-  if (user.wpm && wpm <= user.wpm) {
+  const previousWpm = user.globalScore?.wpm ?? 0;
+
+  // ❌ إذا النتيجة الجديدة أقل أو مساوية للسابق → لا تحدث
+  if (wpm <= previousWpm) {
     return NextResponse.json(
-      { message: "لديك نفس النتيجه او نتيجه سابقة اصغر" },
+      { message: "نتيجتك الحالية أقل أو مساوية لنتيجتك السابقة" },
       { status: 200 }
     );
   }

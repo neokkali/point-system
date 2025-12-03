@@ -7,20 +7,19 @@ export type UserPayload = {
   userId: string;
   username: string;
   role: "ADMIN" | "MODERATOR" | "USER";
-  wpm?: number;
+  globalScore?: {
+    wpm: number;
+  } | null;
 };
 
 const getUserFromAuth = async (): Promise<UserPayload | null> => {
   try {
-    // جلب التوكن من الكوكيز
     const token = (await cookies()).get("accessToken")?.value;
     if (!token) return null;
 
-    // التحقق من صلاحية التوكن
     const payload = await verifyJWT(token);
     if (!payload) return null;
 
-    // جلب المستخدم من قاعدة البيانات للتأكد من الدور
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: {
@@ -28,24 +27,20 @@ const getUserFromAuth = async (): Promise<UserPayload | null> => {
         username: true,
         role: true,
         globalScore: {
-          select: {
-            wpm: true,
-          },
+          select: { wpm: true },
         },
       },
     });
 
     if (!user) return null;
 
-    // إرجاع معلومات المستخدم بما في ذلك الدور
     return {
       userId: user.id,
       username: user.username,
       role: user.role,
-      wpm: user.globalScore?.wpm,
+      globalScore: user.globalScore ?? null,
     };
   } catch {
-    // console.error("getUserFromAuth error:", err);
     return null;
   }
 };
