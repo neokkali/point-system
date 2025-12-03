@@ -112,7 +112,7 @@ const Navbar = () => {
           <Link
             href="/typing-speed"
             className={cn(
-              "text-base md:text-lg hidden md:block",
+              "text-base md:text-lg hidden sm:hidden md:block",
               pathname === "/typing-speed" ? "font-bold" : "font-normal"
             )}
           >
