@@ -2,13 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useSubmitScore } from "@/hooks/use-submit-scores";
 import { articleText } from "@/lib/speed-type-text";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth-provider";
 import { motion } from "framer-motion";
 import { RefreshCcw, Timer, Trophy, Zap } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-// --- Helpers for Unicode-aware grapheme + diacritics handling ---
+// --- Helpers ---
 const getGraphemes = (s: string): string[] => {
   if (!s) return [];
   const SegmenterCtor = (
@@ -35,15 +37,10 @@ const normalizeArabicText = (str: string): string => {
   return removedMarks;
 };
 
-const GAME_DURATION = 60; // seconds
-const WORDS_PER_GAME = 60; // عدد الكلمات لكل لعبة
+const GAME_DURATION = 60;
+const WORDS_PER_GAME = 60;
 
-export default function SpeedType({
-  duration = GAME_DURATION,
-}: {
-  duration?: number;
-}) {
-  // --- state ---
+export default function SpeedType({ duration = GAME_DURATION }) {
   const [text, setText] = useState("");
   const [userInput, setUserInput] = useState("");
   const [timeLeft, setTimeLeft] = useState(duration);
@@ -51,14 +48,21 @@ export default function SpeedType({
   const [isFinished, setIsFinished] = useState(false);
   const [stats, setStats] = useState({ wpm: 0, accuracy: 0 });
 
+  const [lastBestWpm, setLastBestWpm] = useState(0);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // startTimeRef: لتسجيل وقت البداية بدقة (milliseconds)
+  const startTimeRef = useRef<number | null>(null);
+
+  const { isAuthenticated } = useAuth();
+  const submitScore = useSubmitScore();
+
   useEffect(() => {
-    setText(getRandomText()); // ✅ اختر النص العشوائي فقط على العميل
+    setText(getRandomText());
   }, []);
 
-  // --- دوال مساعدة ---
-  function getRandomText(): string {
+  function getRandomText() {
     const words = articleText.split(/\s+/);
     if (words.length <= WORDS_PER_GAME) return articleText.trim();
 
@@ -72,34 +76,68 @@ export default function SpeedType({
   const normalizedUser = normalizeArabicText(userInput);
   const normalizedUserChars = Array.from(normalizedUser);
 
-  const calculateResults = () => {
+  // دالة لحساب النتائج تستخدم زمنًا دقيقًا بواسطة startTimeRef
+  const calculateResults = useCallback(() => {
     const totalChars = normalizedUserChars.length;
     let correctChars = 0;
     const expectedChars: string[] = [];
+
     for (const g of graphemes) {
       const base = normalizeArabicText(g);
       if (base.length > 0) expectedChars.push(...Array.from(base));
     }
+
     for (let i = 0; i < totalChars; i++) {
       if (normalizedUserChars[i] === expectedChars[i]) correctChars++;
     }
+
     const accuracy =
       totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
-    const timeSpentSeconds = duration - timeLeft;
-    const timeInMinutes =
-      timeSpentSeconds === 0 ? duration / 60 : timeSpentSeconds / 60;
+
+    // --- احسب الوقت الحقيقي منذ بداية الكتابة ---
+    const now = Date.now();
+    const start = startTimeRef.current ?? now; // إذا لم يبدأ، استخدم now (فلن يكون صفر)
+    let elapsedMs = Math.max(0, now - start); // milliseconds
+
+    // حد أدنى للزمن لمنع القيم الخارجة: 500ms (0.5s)
+    const minMs = 500;
+    if (elapsedMs < minMs) elapsedMs = minMs;
+
+    const elapsedSeconds = elapsedMs / 1000;
+    const elapsedMinutes = elapsedSeconds / 60;
+
+    // wpm = (correctChars / 5) / elapsedMinutes
     const standardWordCount = correctChars / 5;
     const wpm =
-      timeInMinutes > 0 ? Math.round(standardWordCount / timeInMinutes) : 0;
-    setStats({ wpm, accuracy });
-  };
+      elapsedMinutes > 0 ? Math.round(standardWordCount / elapsedMinutes) : 0;
 
-  const finishGame = () => {
+    return { wpm, accuracy, elapsedSeconds };
+  }, [normalizedUserChars, graphemes]);
+
+  // finishGame المحسّن: يحسب النتائج بدقة ويرسل مرة واحدة فقط
+  const finishGame = useCallback(() => {
     setIsActive(false);
     setIsFinished(true);
-    calculateResults();
     inputRef.current?.blur();
-  };
+
+    const result = calculateResults();
+    setStats({ wpm: result.wpm, accuracy: result.accuracy });
+
+    // لا نرسل للزائر
+    if (!isAuthenticated) return;
+
+    // تجاهل نتائج صفر
+    if (result.wpm === 0) return;
+
+    // إرسال فقط إذا أعلى من أفضل نتيجة
+    if (result.wpm > lastBestWpm) {
+      submitScore.mutate({
+        wpm: result.wpm,
+        accuracy: result.accuracy,
+      });
+      setLastBestWpm(result.wpm);
+    }
+  }, [calculateResults, isAuthenticated, lastBestWpm, submitScore]);
 
   useEffect(() => {
     if (!isFinished) inputRef.current?.focus();
@@ -107,20 +145,29 @@ export default function SpeedType({
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
+
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => setTimeLeft((p) => p - 1), 1000);
     } else if (timeLeft === 0 && isActive) {
       finishGame();
     }
+
     return () => {
-      if (interval !== null) clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, finishGame]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (!isActive && !isFinished) setIsActive(true);
+
+    // عند أول ضغطة تبدأ المباراة → سجل وقت البداية بدقة
+    if (!isActive && !isFinished) {
+      setIsActive(true);
+      startTimeRef.current = Date.now();
+    }
+
     if (isFinished) return;
+
     const cleaned = value.replace(/\u200B|\u200C|\u200D/g, "");
     setUserInput(cleaned);
 
@@ -129,48 +176,62 @@ export default function SpeedType({
       return acc + (base.length > 0 ? Array.from(base).length : 0);
     }, 0);
 
+    // إذا وصل المستخدم لنهاية النص → إنهاء اللعبة
     if (normalizeArabicText(cleaned).length >= expectedBaseCount) {
+      // صغير تأخير للسماح بالرندر النهائي ثم الإنهاء
       setTimeout(() => finishGame(), 50);
     }
   };
 
   const resetGame = () => {
-    setText(getRandomText()); // ✅ النص الجديد عند إعادة الضبط
+    // إعادة ضبط كامل ولا نلمس أي إرسال أو منطق آخر
+    setText(getRandomText());
     setIsActive(false);
     setIsFinished(false);
     setTimeLeft(duration);
     setUserInput("");
     setStats({ wpm: 0, accuracy: 0 });
+
+    // مسح وقت البداية
+    startTimeRef.current = null;
+
     setTimeout(() => inputRef.current?.focus(), 40);
   };
 
   const renderText = () => {
     const normalizedUserCharsLocal = normalizedUserChars;
     let normalizedIndex = 0;
+
     return graphemes.map((cluster, idx) => {
       const baseNormalized = normalizeArabicText(cluster);
       const isBase = baseNormalized.length > 0;
       const expected = isBase ? Array.from(baseNormalized)[0] : "";
       let status: "untyped" | "correct" | "incorrect" = "untyped";
+
       if (isBase && normalizedIndex < normalizedUserCharsLocal.length) {
         const userChar = normalizedUserCharsLocal[normalizedIndex];
         status = userChar === expected ? "correct" : "incorrect";
       }
+
       const showCursor =
         isBase &&
         normalizedIndex === normalizedUserCharsLocal.length &&
         !isFinished &&
         isActive;
+
       if (isBase) normalizedIndex++;
+
       const colorClass =
         status === "correct"
           ? "text-foreground"
           : status === "incorrect"
           ? "text-destructive bg-destructive/10"
           : "text-muted-foreground/50";
+
       const cursorClass = showCursor
         ? "border-r-2 border-primary/90 animate-pulse"
         : "";
+
       return (
         <span
           key={idx}
@@ -208,6 +269,7 @@ export default function SpeedType({
                   {stats.wpm}
                 </span>
               </div>
+
               <div className="flex flex-col items-center justify-center p-8 bg-card rounded-xl border border-border min-w-[180px] shadow-lg">
                 <span className="text-muted-foreground text-sm font-medium mb-2 flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-primary" /> الدقة
@@ -217,20 +279,14 @@ export default function SpeedType({
                 </span>
               </div>
             </div>
-            <div className="text-center space-y-6">
-              <p className="text-slate-400 text-lg">
-                {stats.wpm > 80
-                  ? "أداء ممتاز! 🚀"
-                  : "محاولة جيدة! استمر في التدريب 💪"}
-              </p>
-              <Button
-                onClick={resetGame}
-                size="lg"
-                className="gap-2 px-10 py-6 text-lg rounded-full"
-              >
-                <RefreshCcw className="w-5 h-5" /> اختبار جديد
-              </Button>
-            </div>
+
+            <Button
+              onClick={resetGame}
+              size="lg"
+              className="gap-2 px-10 py-6 text-lg rounded-full"
+            >
+              <RefreshCcw className="w-5 h-5" /> اختبار جديد
+            </Button>
           </motion.div>
         ) : (
           <Card className="border-none shadow-none bg-transparent">
@@ -245,6 +301,7 @@ export default function SpeedType({
                     ثانية
                   </span>
                 </div>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -255,6 +312,7 @@ export default function SpeedType({
                   <span className="hidden md:inline">إعادة ضبط</span>
                 </Button>
               </div>
+
               <div
                 className="relative min-h-[200px] bg-muted/30 rounded-2xl p-6 md:p-10 leading-loose shadow-inner border border-border cursor-text group transition-colors"
                 onClick={() => inputRef.current?.focus()}
@@ -266,6 +324,7 @@ export default function SpeedType({
                     </span>
                   </div>
                 )}
+
                 <div
                   dir="rtl"
                   className="wrap-break-word whitespace-pre-wrap"
@@ -273,6 +332,7 @@ export default function SpeedType({
                 >
                   {renderText()}
                 </div>
+
                 <input
                   ref={inputRef}
                   type="text"
@@ -286,6 +346,7 @@ export default function SpeedType({
                   className="absolute inset-0 w-full h-full opacity-0 cursor-text"
                 />
               </div>
+
               <p className="text-center text-sm text-muted-foreground">
                 السرعة تحسب بناءً على الأحرف الصحيحة المكتوبة (مع تجاهل
                 التشكيل).

@@ -23,8 +23,23 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
 
+  globalScore GlobalScore?
+
   players   Player[]
 }
+
+model GlobalScore {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  totalScore Int     @default(0)
+  wpm       Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+
 
 // ------------------ 2. الغرف ------------------
 enum RoomType {
