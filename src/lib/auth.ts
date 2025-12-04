@@ -10,7 +10,7 @@ const REFRESH_SECRET_KEY = new TextEncoder().encode(
 type JWTPayload = {
   userId: string;
   username: string;
-  role: "ADMIN" | "MODERATOR" | "USER";
+  role: "OWNER" | "ADMIN" | "MODERATOR" | "USER";
 };
 
 type JWTRefreshPayload = {
