@@ -2,7 +2,7 @@ import { prisma } from "@/lib/priams";
 import getUserFromAuth from "@/lib/user-auth";
 import { NextResponse } from "next/server";
 
-const allowedRoles = ["ONWER", "ADMIN", "MODERATOR"];
+const allowedRoles = ["OWNER", "ADMIN", "MODERATOR"];
 
 export async function POST(
   req: Request,

@@ -30,7 +30,7 @@ interface RoomPageProps {
 }
 
 export default function Players({ roomId }: RoomPageProps) {
-  useAuthGuard(["ADMIN", "MODERATOR"], "/auth", "/");
+  useAuthGuard(["OWNER", "ADMIN", "MODERATOR"], "/auth", "/");
   const [isCopied, setIsCopied] = useState(false);
 
   // const { user, isAuthenticated } = useAuth();
