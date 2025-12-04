@@ -120,7 +120,7 @@ export default function PermissionsView() {
   });
 
   const sortedNumbers: Record<string, number> = {
-    ONWER: 0,
+    OWNER: 0,
     ADMIN: 1,
     MODERATOR: 2,
     USER: 3,
