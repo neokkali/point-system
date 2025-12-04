@@ -26,7 +26,7 @@ type RoomType = "ARTICLE" | "QUIZ";
 
 export default function CreateRoomPage() {
   // 🛡️ 1. حماية الصفحة والتحقق من الدور
-  useAuthGuard(["ADMIN"], "/auth", "/403");
+  useAuthGuard(["OWNER"], "/auth", "/");
 
   const [name, setName] = useState("");
   const [type, setType] = useState<RoomType>("ARTICLE");

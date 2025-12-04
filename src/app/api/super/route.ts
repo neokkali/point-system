@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const user = await getUserFromAuth();
-  if (!user || (user.role !== "ADMIN" && user.role !== "MODERATOR")) {
+  const allowedRoles = ["OWNER", "ADMIN", "MODERATOR"];
+
+  if (!user || !allowedRoles.includes(user.role)) {
     return NextResponse.json(
       { error: "غير مصرح بالدخول إلى هذه البيانات" },
       { status: 403 }
@@ -14,7 +16,7 @@ export async function GET() {
   try {
     const data = await prisma.user.findMany({
       where: {
-        role: { in: ["ADMIN", "MODERATOR"] },
+        role: { in: ["OWNER", "ADMIN", "MODERATOR"] },
       },
       include: {
         players: {

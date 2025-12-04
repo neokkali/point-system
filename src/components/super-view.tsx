@@ -4,7 +4,7 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import SuperScores from "./super-scores";
 
 const SuperView = () => {
-  useAuthGuard(["ADMIN", "MODERATOR"], "/auth", "/");
+  useAuthGuard(["OWNER", "ADMIN", "MODERATOR"], "/auth", "/");
   return <SuperScores />;
 };
 

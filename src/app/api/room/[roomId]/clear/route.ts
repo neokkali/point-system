@@ -3,7 +3,7 @@ import { prisma } from "@/lib/priams";
 import getUserFromAuth from "@/lib/user-auth";
 import { NextResponse } from "next/server";
 
-const allowedRoles = ["ADMIN", "MODERATOR"];
+const allowedRoles = ["ONWER", "ADMIN", "MODERATOR"];
 
 export async function DELETE(
   req: Request,

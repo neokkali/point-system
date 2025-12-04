@@ -6,7 +6,7 @@ import { prisma } from "./priams";
 export type UserPayload = {
   userId: string;
   username: string;
-  role: "ADMIN" | "MODERATOR" | "USER";
+  role: "OWNER" | "ADMIN" | "MODERATOR" | "USER";
   globalScore?: {
     wpm: number;
   } | null;

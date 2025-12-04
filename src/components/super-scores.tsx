@@ -8,12 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronUp,
+  Crown,
   Shield,
   Trophy,
   Users,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { JSX, useState } from "react";
 import { DotLoader } from "./app-loader";
 
 /**
@@ -41,9 +42,33 @@ type UserSupervisor = {
  * Helper: ترجمة/عرض نص الدور (قابل للتعديل لاحقاً)
  */
 const userRoles: Record<string, string> = {
-  ADMIN: "مشرف",
+  OWNER: "",
+  ADMIN: "مدير",
   MODERATOR: "مشرف",
   USER: "مستخدم",
+};
+
+const roleStyles: Record<
+  "OWNER" | "ADMIN" | "MODERATOR",
+  {
+    variant: "default" | "secondary" | "destructive" | "outline";
+    className?: string;
+    icon: JSX.Element;
+  }
+> = {
+  OWNER: {
+    variant: "default",
+    className: "bg-yellow-400 text-black", // لون ذهبي مخصص
+    icon: <Crown className="mb-[3px]" />,
+  },
+  ADMIN: {
+    variant: "destructive",
+    icon: <Shield className="mb-[3px]" />,
+  },
+  MODERATOR: {
+    variant: "secondary",
+    icon: <Shield className="mb-[3px]" />,
+  },
 };
 
 /**
@@ -53,7 +78,7 @@ const calculateSupervisorTotalScore = (supervisor: UserSupervisor) => {
   return supervisor.players.reduce((supTotal, player) => {
     const playerTotal = player.roomScores.reduce(
       (pTotal, rs) => pTotal + rs.totalScore,
-      0,
+      0
     );
     return supTotal + playerTotal;
   }, 0);
@@ -66,7 +91,7 @@ const calculateSupervisorTotalScore = (supervisor: UserSupervisor) => {
 const renderSupervisorRooms = (
   sup: UserSupervisor,
   expandedRooms: Record<string, boolean>,
-  toggleRoom: (supervisorId: string, roomId: string) => void,
+  toggleRoom: (supervisorId: string, roomId: string) => void
 ) => {
   const roomsMap: Record<
     string,
@@ -173,14 +198,14 @@ export default function SuperScores() {
       // ترتيب المشرفين تنازلي حسب نقاطهم الإجمالية
       return supervisors.sort(
         (a: UserSupervisor, b: UserSupervisor) =>
-          calculateSupervisorTotalScore(b) - calculateSupervisorTotalScore(a),
+          calculateSupervisorTotalScore(b) - calculateSupervisorTotalScore(a)
       );
     },
     refetchInterval: 5000, // تحديث تلقائي
   });
 
   const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>(
-    {},
+    {}
   );
 
   const toggleRoom = (supervisorId: string, roomId: string) => {
@@ -246,13 +271,13 @@ export default function SuperScores() {
                     </div>
                     <div className="mt-1 text-sm">
                       <Badge
-                        variant={
-                          sup.role === "ADMIN" ? "destructive" : "secondary"
-                        }
-                      >
-                        {(sup.role === "ADMIN" || sup.role === "MODERATOR") && (
-                          <Shield className={cn("mb-[3px]")} />
+                        variant={roleStyles[sup.role].variant}
+                        className={cn(
+                          "flex items-center gap-1",
+                          roleStyles[sup.role].className
                         )}
+                      >
+                        {roleStyles[sup.role].icon}
                         {userRoles[sup.role]}
                       </Badge>
                     </div>

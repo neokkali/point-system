@@ -7,20 +7,27 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import api from "@/lib/axiosClient";
 import { useAuth } from "@/providers/auth-provider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Shield, Users } from "lucide-react"; // تم إضافة أيقونات
+import { Crown, Loader2, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DotLoader } from "./app-loader";
 
+// ------------------------
+// أنواع الأدوار
+// ------------------------
+export type UserRole = "OWNER" | "ADMIN" | "MODERATOR" | "USER";
+
 type User = {
   id: string;
   username: string;
-  role: "ADMIN" | "MODERATOR" | "USER";
+  role: UserRole;
 };
 
-// تعريف الأدوار المتاحة للعرض والتحرير
+// ------------------------
+// خيارات الصلاحيات
+// ------------------------
 const ROLE_OPTIONS: {
-  role: User["role"];
+  role: UserRole;
   label: string;
   description: string;
 }[] = [
@@ -37,79 +44,105 @@ const ROLE_OPTIONS: {
   {
     role: "USER",
     label: "مستخدم",
-    description: "وصول محدود أو غير مصرح له بالإدارة.",
+    description: "وصول محدود بدون تحكم.",
   },
 ];
 
-// دالة مساعدة لتلوين الصلاحيات
-const getRoleVariant = (role: User["role"]) => {
+// ------------------------
+// من يمكنه تعديل من؟
+// currentRole: دور المستخدم الذي يقوم بالتعديل
+// targetRole: دور المستخدم المراد تعديله
+// newRole: الدور الذي يحاول تعيينه
+// ------------------------
+export function canEditUser(
+  currentRole: UserRole,
+  targetRole: UserRole,
+  newRole: UserRole
+): boolean {
+  if (currentRole === "OWNER") return true;
+
+  if (currentRole === "ADMIN") {
+    if (targetRole === "OWNER") return false; // لا يمكن تعديل OWNER
+    if (targetRole === "ADMIN" && targetRole !== newRole) return false; // لا يمكن خفض ADMIN آخر
+    return true; // يمكن الترقية أو تعديل MODERATOR/USER
+  }
+
+  if (currentRole === "MODERATOR") {
+    if (targetRole === "USER") return true;
+    return false;
+  }
+
+  return false;
+}
+
+// ------------------------
+// تلوين شارة الدور
+// ------------------------
+const getRoleVariant = (role: UserRole) => {
   switch (role) {
+    case "OWNER":
+      return "default";
     case "ADMIN":
-      return "destructive"; // أحمر قوي
+      return "destructive";
     case "MODERATOR":
-      return "default"; // اللون الأساسي (Primary/Indigo)
+      return "default";
     case "USER":
-      return "secondary"; // رمادي هادئ
+      return "secondary";
     default:
       return "secondary";
   }
 };
 
 export default function PermissionsView() {
-  useAuthGuard(["ADMIN"], "/auth", "/");
+  useAuthGuard(["OWNER", "ADMIN"], "/auth", "/");
+
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  // حالة محلية لتتبع التغييرات قبل الحفظ
-  const [localRoles, setLocalRoles] = useState<Record<string, User["role"]>>(
-    {}
-  );
+  const [localRoles, setLocalRoles] = useState<Record<string, UserRole>>({});
 
+  // ------------------------
+  // تحميل المستخدمين
+  // ------------------------
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ["permissions"],
     queryFn: async () => {
       const res = await api.get("/permissions");
       const usersData = res.data.users as User[];
 
-      // تهيئة الحالة المحلية بالصلاحيات الحالية
-      const initRoles: Record<string, User["role"]> = {};
-      usersData.forEach((u) => {
-        initRoles[u.id] = u.role;
-      });
+      const initRoles: Record<string, UserRole> = {};
+      usersData.forEach((u) => (initRoles[u.id] = u.role));
+
       setLocalRoles(initRoles);
       return usersData;
     },
-    // إيقاف الاستعلام المتكرر إذا لم يكن هناك مستخدمين
     enabled: !!currentUser,
   });
 
+  // ------------------------
+  // تحديث الصلاحيات
+  // ------------------------
   const mutation = useMutation({
     mutationFn: async () => {
       const updates = Object.entries(localRoles).map(([id, role]) => ({
         id,
         role,
       }));
-      // إرسال التحديثات إلى نقطة النهاية (API Endpoint)
       await api.put("/permissions", { updates });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["permissions"] });
-      queryClient.invalidateQueries({ queryKey: ["current-user"] });
       toast.success("✅ تم تحديث الصلاحيات بنجاح.");
     },
-    onError: (error) => {
-      toast.error(`❌ فشل التحديث: ${error.message}`);
+    onError: () => {
+      toast.error("❌ فشل التحديث.");
     },
   });
 
   if (isLoading) {
     return (
       <div className="h-[80vh] flex flex-col justify-center items-center">
-        <DotLoader
-          size="lg"
-          text="جاري تحميل قائمة المستخدمين"
-          color="primary"
-        />
+        <DotLoader size="lg" text="جاري تحميل قائمة المستخدمين" />
       </div>
     );
   }
@@ -117,7 +150,7 @@ export default function PermissionsView() {
   return (
     <div className="max-w-4xl mx-auto mt-10 space-y-6 p-4 md:p-0">
       <Card className="border shadow-lg dark:border-gray-800">
-        <CardHeader className="flex flex-row items-center justify-start gap-3 border-b dark:border-gray-800 p-4 md:p-6">
+        <CardHeader className="flex flex-row items-center gap-3 border-b dark:border-gray-800 p-4 md:p-6">
           <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           <CardTitle className="text-xl md:text-2xl font-bold">
             إدارة صلاحيات المستخدمين
@@ -131,12 +164,12 @@ export default function PermissionsView() {
                 <th className="w-[30%] p-4 text-right border-b dark:border-gray-800">
                   <Users className="inline w-4 h-4 ml-1" /> الاسم
                 </th>
-                {ROLE_OPTIONS.map((option) => (
+                {ROLE_OPTIONS.map((r) => (
                   <th
-                    key={option.role}
+                    key={r.role}
                     className="w-[20%] p-4 text-center border-b dark:border-gray-800"
                   >
-                    {option.label}
+                    {r.label}
                   </th>
                 ))}
               </tr>
@@ -145,26 +178,36 @@ export default function PermissionsView() {
             <tbody>
               {users?.map((u) => {
                 const isCurrent = currentUser?.id === u.id;
-                const currentRole = localRoles[u.id] || u.role;
-                const isRoleChanged = currentRole !== u.role;
+                const originalRole = u.role as UserRole; // الدور من قاعدة البيانات
+                const currentRole = localRoles[u.id] as UserRole;
+                const isChanged = currentRole !== originalRole;
+
+                const isOwnerLocked =
+                  u.role === "OWNER" && currentUser?.role !== "OWNER";
 
                 return (
                   <tr
                     key={u.id}
                     className={`
-                      border-b dark:border-gray-800 transition-colors duration-200
+                      border-b dark:border-gray-800
                       ${
-                        isCurrent
-                          ? "bg-indigo-50/50 dark:bg-gray-700/30 font-medium"
+                        isOwnerLocked
+                          ? "opacity-50 cursor-not-allowed"
                           : "hover:bg-gray-50 dark:hover:bg-gray-800"
                       }
+                      ${isCurrent ? "bg-indigo-50/50 dark:bg-gray-700/30" : ""}
                     `}
                   >
-                    {/* عمود اسم المستخدم */}
+                    {/* اسم المستخدم */}
                     <td className="p-4 flex items-center gap-2">
-                      <span className="text-gray-900 dark:text-gray-100 truncate">
+                      <span className="text-gray-900 dark:text-gray-100">
                         {u.username}
                       </span>
+
+                      {u.role === "OWNER" && (
+                        <Crown className="w-4 h-4 text-yellow-500" />
+                      )}
+
                       {isCurrent && (
                         <Badge
                           variant="secondary"
@@ -173,7 +216,8 @@ export default function PermissionsView() {
                           أنت
                         </Badge>
                       )}
-                      {isRoleChanged && (
+
+                      {isChanged && (
                         <Badge
                           variant="outline"
                           className="text-xs border-dashed text-orange-500 border-orange-300"
@@ -183,36 +227,53 @@ export default function PermissionsView() {
                       )}
                     </td>
 
-                    {/* أعمدة اختيار الصلاحيات */}
-                    {ROLE_OPTIONS.map((roleOption) => (
-                      <td key={roleOption.role} className="p-4 text-center">
-                        <label
-                          className={`
-                            inline-flex items-center justify-center w-full h-full cursor-pointer rounded-full transition-all duration-150 p-2
-                            ${
-                              localRoles[u.id] === roleOption.role
-                                ? "bg-indigo-100 dark:bg-indigo-900/50"
-                                : "hover:bg-gray-200/50 dark:hover:bg-gray-700/50"
-                            }
-                        `}
-                        >
-                          <input
-                            type="radio"
-                            name={u.id}
-                            disabled={isCurrent || mutation.isPending}
-                            checked={localRoles[u.id] === roleOption.role}
-                            onChange={() =>
-                              setLocalRoles((prev) => ({
-                                ...prev,
-                                [u.id]: roleOption.role,
-                              }))
-                            }
-                            // تصميم أفضل لأزرار الراديو
-                            className="w-4 h-4 accent-indigo-600 dark:accent-indigo-400 cursor-pointer disabled:opacity-50"
-                          />
-                        </label>
-                      </td>
-                    ))}
+                    {/* خيارات الدور */}
+                    {ROLE_OPTIONS.map((roleOption) => {
+                      const allowEdit = currentUser
+                        ? canEditUser(
+                            currentUser.role as UserRole,
+                            u.role as UserRole,
+                            roleOption.role as UserRole
+                          )
+                        : false;
+
+                      return (
+                        <td key={roleOption.role} className="p-4 text-center">
+                          <label
+                            className={`inline-flex items-center justify-center w-full p-2 rounded-full cursor-pointer
+                              ${
+                                currentRole === roleOption.role
+                                  ? "bg-indigo-100 dark:bg-indigo-900/50"
+                                  : "hover:bg-gray-200/50 dark:hover:bg-gray-700/50"
+                              }
+                              ${
+                                !allowEdit || isOwnerLocked
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }
+                            `}
+                          >
+                            <input
+                              type="radio"
+                              name={u.id}
+                              disabled={
+                                !allowEdit ||
+                                isOwnerLocked ||
+                                mutation.isPending
+                              }
+                              checked={currentRole === roleOption.role}
+                              onChange={() =>
+                                setLocalRoles((prev) => ({
+                                  ...prev,
+                                  [u.id]: roleOption.role as UserRole,
+                                }))
+                              }
+                              className="w-4 h-4 accent-indigo-600 disabled:opacity-40"
+                            />
+                          </label>
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}
@@ -223,11 +284,7 @@ export default function PermissionsView() {
 
       {/* زر الحفظ */}
       <div className="flex justify-start p-4 md:p-0">
-        <Button
-          onClick={() => mutation.mutate()}
-          disabled={mutation.isPending}
-          className=""
-        >
+        <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
           {mutation.isPending ? (
             <>
               جارٍ الحفظ
@@ -239,25 +296,23 @@ export default function PermissionsView() {
         </Button>
       </div>
 
-      {/* قسم تلميحات الأدوار (لتحسين UX) */}
+      {/* توضيح الأدوار */}
       <div className="pt-4 border-t dark:border-gray-800">
         <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">
           توضيح الأدوار:
         </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {ROLE_OPTIONS.map((option) => (
+          {ROLE_OPTIONS.map((r) => (
             <div
-              key={option.role}
+              key={r.role}
               className="p-3 border rounded-lg bg-white dark:bg-gray-800 shadow-sm"
             >
-              <Badge
-                variant={getRoleVariant(option.role)}
-                className="mb-1 text-sm"
-              >
-                {option.label}
+              <Badge variant={getRoleVariant(r.role)} className="mb-1 text-sm">
+                {r.label}
               </Badge>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {option.description}
+                {r.description}
               </p>
             </div>
           ))}

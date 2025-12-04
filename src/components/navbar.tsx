@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
-import { LogOut, PlusCircle, Shield, Users } from "lucide-react";
+import { Crown, LogOut, PlusCircle, Shield, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggleButton } from "./theme-toggle.button";
 
@@ -24,6 +24,7 @@ const Navbar = () => {
   const isRooms = pathname.startsWith("/rooms");
 
   const { user, isAuthenticated, logout, loading } = useAuth();
+  const isOnwer = user?.role === "OWNER";
   const isAdmin = user?.role === "ADMIN";
   const isModerator = user?.role === "MODERATOR";
 
@@ -49,6 +50,7 @@ const Navbar = () => {
                     )}
                   />
                 )}
+                {isOnwer && <Crown className="h-4 w-4 text-yellow-500" />}
                 {sliceUsername(user?.username || "User")}
               </Button>
             </DropdownMenuTrigger>
@@ -58,7 +60,7 @@ const Navbar = () => {
               align="start"
             >
               <DropdownMenuGroup>
-                {(isAdmin || isModerator) && (
+                {(isOnwer || isAdmin || isModerator) && (
                   <DropdownMenuItem
                     onClick={() => router.push("/super")}
                     className="hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -67,7 +69,7 @@ const Navbar = () => {
                     نقاط السوابر
                   </DropdownMenuItem>
                 )}
-                {isAdmin && (
+                {(isOnwer || isAdmin) && (
                   <>
                     <DropdownMenuItem
                       onClick={() => router.push("/super/permissions")}
@@ -76,15 +78,18 @@ const Navbar = () => {
                       <Shield className="w-5 h-5" />
                       صلاحيات المستخدمين
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => router.push("/rooms/create")}
-                      className="hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <PlusCircle className="w-4 h-4 opacity-70" />
-                      الغرف
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
+                )}
+
+                {isOnwer && (
+                  <DropdownMenuItem
+                    onClick={() => router.push("/rooms/create")}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <PlusCircle className="w-4 h-4 opacity-70" />
+                    الغرف
+                  </DropdownMenuItem>
                 )}
 
                 <DropdownMenuItem
@@ -119,17 +124,19 @@ const Navbar = () => {
             مدرب الطباعة
           </Link>
 
-          {!loading && isAuthenticated && (isAdmin || isModerator) && (
-            <Link
-              href="/rooms"
-              className={cn(
-                "text-base md:text-lg",
-                isRooms ? "font-bold" : "font-normal"
-              )}
-            >
-              نقاطي
-            </Link>
-          )}
+          {!loading &&
+            isAuthenticated &&
+            (isOnwer || isAdmin || isModerator) && (
+              <Link
+                href="/rooms"
+                className={cn(
+                  "text-base md:text-lg",
+                  isRooms ? "font-bold" : "font-normal"
+                )}
+              >
+                نقاطي
+              </Link>
+            )}
         </div>
 
         {!loading && !isAuthenticated && (

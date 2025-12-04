@@ -9,6 +9,7 @@ datasource db {
 
 // ------------------ 1. المستخدمين ------------------
 enum Role {
+  OWNER
   ADMIN
   MODERATOR
   USER
