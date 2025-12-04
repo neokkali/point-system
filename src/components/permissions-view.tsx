@@ -119,6 +119,17 @@ export default function PermissionsView() {
     enabled: !!currentUser,
   });
 
+  const sortedNumbers: Record<string, number> = {
+    ONWER: 0,
+    ADMIN: 1,
+    MODERATOR: 2,
+    USER: 3,
+  };
+
+  const sortedUsers = users?.slice().sort((a, b) => {
+    return sortedNumbers[a.role] - sortedNumbers[b.role];
+  });
+
   // ------------------------
   // تحديث الصلاحيات
   // ------------------------
@@ -176,7 +187,7 @@ export default function PermissionsView() {
             </thead>
 
             <tbody>
-              {users?.map((u) => {
+              {sortedUsers?.map((u) => {
                 const isCurrent = currentUser?.id === u.id;
                 const originalRole = u.role as UserRole; // الدور من قاعدة البيانات
                 const currentRole = localRoles[u.id] as UserRole;
