@@ -34,11 +34,11 @@ export default function HomeView() {
     );
     if (!sortedPlayers.length) return;
 
-    // صيغة النسخ الصحيحة فقط
     const formatted = sortedPlayers
       .map((p) => `${p.username}: ${p.totalScore}`)
       .join(" | ");
 
+    // استخدم Clipboard API مباشرة على النص الجاهز
     navigator.clipboard
       .writeText(formatted)
       .then(() => {
@@ -48,9 +48,7 @@ export default function HomeView() {
           2000
         );
       })
-      .catch((err) => {
-        console.error("Copy failed:", err);
-      });
+      .catch((err) => console.error("Copy failed:", err));
   };
 
   // ---------------------- States ----------------------

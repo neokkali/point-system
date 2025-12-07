@@ -59,7 +59,12 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(result);
+    return new NextResponse(JSON.stringify(result), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "فشل جلب النقاط" }, { status: 500 });
