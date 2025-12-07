@@ -37,7 +37,6 @@ export default function HomeView() {
     const formatted = sortedPlayers
       .map((p) => `${p.username}: ${p.totalScore}`)
       .join(" | ");
-
     navigator.clipboard.writeText(formatted);
     setIsCopied((prev) => ({ ...prev, [roomId]: true }));
     setTimeout(
