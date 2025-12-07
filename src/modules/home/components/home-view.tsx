@@ -34,15 +34,23 @@ export default function HomeView() {
     );
     if (!sortedPlayers.length) return;
 
+    // صيغة النسخ الصحيحة فقط
     const formatted = sortedPlayers
       .map((p) => `${p.username}: ${p.totalScore}`)
       .join(" | ");
-    navigator.clipboard.writeText(formatted);
-    setIsCopied((prev) => ({ ...prev, [roomId]: true }));
-    setTimeout(
-      () => setIsCopied((prev) => ({ ...prev, [roomId]: false })),
-      2000
-    );
+
+    navigator.clipboard
+      .writeText(formatted)
+      .then(() => {
+        setIsCopied((prev) => ({ ...prev, [roomId]: true }));
+        setTimeout(
+          () => setIsCopied((prev) => ({ ...prev, [roomId]: false })),
+          2000
+        );
+      })
+      .catch((err) => {
+        console.error("Copy failed:", err);
+      });
   };
 
   // ---------------------- States ----------------------
