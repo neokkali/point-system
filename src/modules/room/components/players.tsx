@@ -10,7 +10,6 @@ import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
 import { Check, Copy, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import ClearRoomButton from "./clear-room-button";
 
 interface Player {
@@ -50,7 +49,7 @@ export default function Players({ roomId }: RoomPageProps) {
           id: p.id,
           username: p.username,
           points: String(p.totalScore),
-        })),
+        }))
       );
     } else {
       setNewPlayers([]);
@@ -61,7 +60,7 @@ export default function Players({ roomId }: RoomPageProps) {
   const handleChange = (
     index: number,
     field: "username" | "points",
-    value: string,
+    value: string
   ) => {
     setNewPlayers((prev) => {
       const updated = [...prev];
@@ -93,12 +92,9 @@ export default function Players({ roomId }: RoomPageProps) {
 
   const handleCopyPoints = (players: Player[]) => {
     const sortedPlayers = [...players].sort(
-      (a, b) => b.totalScore - a.totalScore,
+      (a, b) => b.totalScore - a.totalScore
     );
-    if (sortedPlayers.length === 0) {
-      toast.error("لا يوجد نقاط لنسخها!");
-      return;
-    }
+    if (!sortedPlayers.length) return;
     const formatted = sortedPlayers
       .map((p) => `${p.username}: ${p.totalScore}`)
       .join(" | ");
