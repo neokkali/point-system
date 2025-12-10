@@ -29,7 +29,7 @@ export default function UserBadge({
           className="object-contain"
         />
       )}
-      <span className="text-lg font-semibold">{name}</span>
+      <span className="text-lg font-semibold mt-1">{name}</span>
     </div>
   );
 }
