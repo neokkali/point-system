@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
-import { Crown, LogOut, PlusCircle, Shield, Users } from "lucide-react";
+import { LogOut, PlusCircle, Shield, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggleButton } from "./theme-toggle.button";
+import UserBadge from "./user-with-badge";
 
 const Navbar = () => {
   const router = useRouter();
@@ -42,16 +43,20 @@ const Navbar = () => {
           <DropdownMenu dir="rtl" modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="rounded-full px-4">
-                {(isAdmin || isModerator) && (
+                {/* {(isAdmin || isModerator) && (
                   <Shield
                     className={cn(
                       "mb-1",
                       isAdmin ? "text-red-500" : "text-blue-500"
                     )}
                   />
-                )}
-                {isOnwer && <Crown className="h-4 w-4 text-yellow-500" />}
-                {sliceUsername(user?.username || "User")}
+                )} */}
+                {/* {isOnwer && <Crown className="h-4 w-4 text-yellow-500" />} */}
+                <UserBadge
+                  name={sliceUsername(user?.username || "User")}
+                  role={(user?.role as string) || ""}
+                />
+                {/* {sliceUsername(user?.username || "User")} */}
               </Button>
             </DropdownMenuTrigger>
 
