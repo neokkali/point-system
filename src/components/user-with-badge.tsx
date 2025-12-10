@@ -3,8 +3,8 @@ import Image from "next/image";
 // type UserRole = "OWNER" | "ADMIN" | "MODERATOR" | "USER";
 
 const badgeMap: Record<string, string | null> = {
-  OWNER: "/icons/shield1.gif",
-  ADMIN: "/icons/shield2.gif",
+  OWNER: "/icons/shield4.gif",
+  ADMIN: "/icons/shield1.gif",
   MODERATOR: "/icons/shield3.gif",
   USER: null,
 };
