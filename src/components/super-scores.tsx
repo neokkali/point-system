@@ -14,6 +14,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import { JSX, useState } from "react";
 import { DotLoader } from "./app-loader";
 
@@ -42,7 +43,7 @@ type UserSupervisor = {
  * Helper: ترجمة/عرض نص الدور (قابل للتعديل لاحقاً)
  */
 const userRoles: Record<string, string> = {
-  OWNER: "",
+  OWNER: "onwer",
   ADMIN: "مدير",
   MODERATOR: "مشرف",
   USER: "مستخدم",
@@ -265,11 +266,23 @@ export default function SuperScores() {
               <CardHeader>
                 <div className="flex items-center justify-between w-full">
                   <div>
-                    <div className="flex items-center gap-2">
-                      {isTopSupervisor && <Trophy />}
-                      <div className="font-bold text-lg">{sup.username}</div>
+                    <div className="flex items-center gap-1">
+                      {/* {isTopSupervisor && <Trophy />} */}
+                      {isTopSupervisor && (
+                        <Image
+                          alt="supervisor top"
+                          src={"/icons/shield1.gif"}
+                          width={33}
+                          height={33}
+                          className="object-contain"
+                        />
+                      )}
+                      <div className="font-bold text-lg mt-2">
+                        {sup.username}
+                      </div>
                     </div>
-                    <div className="mt-1 text-sm">
+                    <div className="text-sm">
+                      {/* <UserBadge role={sup.role} /> */}
                       <Badge
                         variant={roleStyles[sup.role].variant}
                         className={cn(
