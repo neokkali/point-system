@@ -33,7 +33,15 @@ export async function GET(
       },
     });
 
-    return NextResponse.json(playersInRoom);
+    const formattedPlayers = playersInRoom.map((item) => ({
+      id: item.id,
+      playerId: item.playerId,
+      totalScore: item.totalScore,
+      username: item.player.username, // سحب الاسم للخارج
+      updatedAt: item.updatedAt,
+    }));
+
+    return NextResponse.json(formattedPlayers);
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "فشل جلب البيانات" }, { status: 500 });
