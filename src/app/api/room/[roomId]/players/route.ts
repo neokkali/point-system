@@ -33,7 +33,7 @@ export async function GET(
       },
     });
 
-    const formattedPlayers = playersInRoom.map((item) => ({
+    const formattedPlayers = playersInRoom.map((item: any) => ({
       id: item.id,
       playerId: item.playerId,
       totalScore: item.totalScore,
