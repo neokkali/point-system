@@ -272,8 +272,8 @@ export default function SuperScores({ url }: { url: string }) {
                         <Image
                           alt="supervisor top"
                           src={"/icons/shield4.gif"}
-                          width={33}
-                          height={33}
+                          width={35}
+                          height={35}
                           className="object-contain"
                         />
                       )}
