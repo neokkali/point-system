@@ -1,5 +1,6 @@
 "use client";
 
+import SuperViewPublic from "@/components/super-view-public";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGlobalScores } from "@/hooks/use-global-scores";
@@ -30,7 +31,7 @@ export default function HomeView() {
   // ---------------------- Helper: Copy Function ----------------------
   const handleCopyPoints = (roomId: string, players: Player[]) => {
     const sortedPlayers = [...players].sort(
-      (a, b) => b.totalScore - a.totalScore
+      (a, b) => b.totalScore - a.totalScore,
     );
     if (!sortedPlayers.length) return;
 
@@ -45,7 +46,7 @@ export default function HomeView() {
         setIsCopied((prev) => ({ ...prev, [roomId]: true }));
         setTimeout(
           () => setIsCopied((prev) => ({ ...prev, [roomId]: false })),
-          2000
+          2000,
         );
       })
       .catch((err) => console.error("Copy failed:", err));
@@ -95,7 +96,7 @@ export default function HomeView() {
         {data.map((room: Room) => {
           const hasPlayers = room.players?.length > 0;
           const sortedPlayers = [...(room.players || [])].sort(
-            (a, b) => b.totalScore - a.totalScore
+            (a, b) => b.totalScore - a.totalScore,
           );
           const maxScore = sortedPlayers[0]?.totalScore || 1;
 
@@ -159,10 +160,10 @@ export default function HomeView() {
                                   isFirst
                                     ? "text-yellow-500"
                                     : rank === 2
-                                    ? "text-slate-400"
-                                    : rank === 3
-                                    ? "text-amber-700"
-                                    : "text-muted-foreground"
+                                      ? "text-slate-400"
+                                      : rank === 3
+                                        ? "text-amber-700"
+                                        : "text-muted-foreground",
                                 )}
                               >
                                 {isFirst ? (
@@ -175,7 +176,7 @@ export default function HomeView() {
                               <span
                                 className={cn(
                                   "font-medium truncate max-w-[120px]",
-                                  isFirst && "text-primary font-bold"
+                                  isFirst && "text-primary font-bold",
                                 )}
                               >
                                 {player.username}
@@ -195,7 +196,7 @@ export default function HomeView() {
                               transition={{ duration: 0.8, ease: "easeOut" }}
                               className={cn(
                                 "h-full rounded-full",
-                                isFirst ? "bg-yellow-500" : "bg-primary/70"
+                                isFirst ? "bg-yellow-500" : "bg-primary/70",
                               )}
                             />
                           </div>
@@ -209,6 +210,7 @@ export default function HomeView() {
           );
         })}
       </div>
+      <SuperViewPublic />
     </div>
   );
 }

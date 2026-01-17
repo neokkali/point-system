@@ -3,9 +3,9 @@
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import SuperScores from "./super-scores";
 
-const SuperView = () => {
+const SuperViewPublic = () => {
   useAuthGuard(["OWNER", "ADMIN", "MODERATOR"], "/auth", "/");
-  return <SuperScores url="/super" />;
+  return <SuperScores url="/super/public" />;
 };
 
-export default SuperView;
+export default SuperViewPublic;

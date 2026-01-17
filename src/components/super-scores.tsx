@@ -79,7 +79,7 @@ const calculateSupervisorTotalScore = (supervisor: UserSupervisor) => {
   return supervisor.players.reduce((supTotal, player) => {
     const playerTotal = player.roomScores.reduce(
       (pTotal, rs) => pTotal + rs.totalScore,
-      0
+      0,
     );
     return supTotal + playerTotal;
   }, 0);
@@ -92,7 +92,7 @@ const calculateSupervisorTotalScore = (supervisor: UserSupervisor) => {
 const renderSupervisorRooms = (
   sup: UserSupervisor,
   expandedRooms: Record<string, boolean>,
-  toggleRoom: (supervisorId: string, roomId: string) => void
+  toggleRoom: (supervisorId: string, roomId: string) => void,
 ) => {
   const roomsMap: Record<
     string,
@@ -190,23 +190,23 @@ const renderSupervisorRooms = (
 /**
  * Component الرئيسي
  */
-export default function SuperScores() {
+export default function SuperScores({ url }: { url: string }) {
   const { data, isLoading, isError } = useQuery<UserSupervisor[]>({
     queryKey: ["supervisors"],
     queryFn: async () => {
-      const res = await api.get("/super");
+      const res = await api.get(url);
       const supervisors: UserSupervisor[] = res.data.users || [];
       // ترتيب المشرفين تنازلي حسب نقاطهم الإجمالية
       return supervisors.sort(
         (a: UserSupervisor, b: UserSupervisor) =>
-          calculateSupervisorTotalScore(b) - calculateSupervisorTotalScore(a)
+          calculateSupervisorTotalScore(b) - calculateSupervisorTotalScore(a),
       );
     },
     refetchInterval: 5000, // تحديث تلقائي
   });
 
   const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>(
-    {}
+    {},
   );
 
   const toggleRoom = (supervisorId: string, roomId: string) => {
@@ -287,7 +287,7 @@ export default function SuperScores() {
                         variant={roleStyles[sup.role].variant}
                         className={cn(
                           "flex items-center gap-1",
-                          roleStyles[sup.role].className
+                          roleStyles[sup.role].className,
                         )}
                       >
                         {roleStyles[sup.role].icon}
