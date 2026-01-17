@@ -43,7 +43,7 @@ type UserSupervisor = {
  * Helper: ترجمة/عرض نص الدور (قابل للتعديل لاحقاً)
  */
 const userRoles: Record<string, string> = {
-  OWNER: "onwer",
+  OWNER: "owner",
   ADMIN: "مدير",
   MODERATOR: "مشرف",
   USER: "مستخدم",
