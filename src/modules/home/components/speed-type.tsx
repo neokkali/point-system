@@ -39,7 +39,7 @@ const normalizeArabicText = (str: string): string => {
   return removedMarks;
 };
 
-const GAME_DURATION = 30; // seconds
+const GAME_DURATION = 25; // seconds
 const WORDS_PER_GAME = 30;
 
 export default function SpeedType({
