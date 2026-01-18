@@ -157,7 +157,7 @@ export default function HomeView() {
                               {/* Rank Indicator */}
                               <div
                                 className={cn(
-                                  "w-5 text-center font-bold text-xs",
+                                  "w-11 text-center font-bold text-xs",
                                   isFirst
                                     ? "text-yellow-500"
                                     : rank === 2
