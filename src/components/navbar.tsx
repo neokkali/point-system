@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useWipeRoom } from "@/hooks/use-wipe-room";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { LogOut, PlusCircle, Shield, Users } from "lucide-react";
@@ -28,6 +29,8 @@ const Navbar = () => {
   const isOnwer = user?.role === "OWNER";
   const isAdmin = user?.role === "ADMIN";
   const isModerator = user?.role === "MODERATOR";
+
+  const { mutate: wipeRoom } = useWipeRoom();
 
   const sliceUsername = (username: string) => {
     if (!username) return "User";
@@ -114,7 +117,7 @@ const Navbar = () => {
             href="/"
             className={cn(
               "text-base md:text-lg",
-              pathname === "/" ? "font-bold" : "font-normal"
+              pathname === "/" ? "font-bold" : "font-normal",
             )}
           >
             الرئيسية
@@ -123,11 +126,15 @@ const Navbar = () => {
             href="/typing-speed"
             className={cn(
               "text-base md:text-lg hidden md:block",
-              pathname === "/typing-speed" ? "font-bold" : "font-normal"
+              pathname === "/typing-speed" ? "font-bold" : "font-normal",
             )}
           >
             مدرب الطباعة
           </Link>
+
+          {isOnwer && (
+            <Button onClick={() => wipeRoom()}>حذف نقاط المسابقات</Button>
+          )}
 
           {!loading &&
             isAuthenticated &&
@@ -136,7 +143,7 @@ const Navbar = () => {
                 href="/rooms"
                 className={cn(
                   "text-base md:text-lg",
-                  isRooms ? "font-bold" : "font-normal"
+                  isRooms ? "font-bold" : "font-normal",
                 )}
               >
                 نقاطي
