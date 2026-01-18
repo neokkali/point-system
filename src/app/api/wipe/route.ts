@@ -1,4 +1,3 @@
-// src/app/api/room/[roomId]/clear/route.ts
 import { prisma } from "@/lib/priams";
 import getUserFromAuth from "@/lib/user-auth";
 import { NextResponse } from "next/server";
@@ -14,28 +13,18 @@ export async function DELETE(req: Request) {
     if (!allowedRoles.includes(user.role))
       return NextResponse.json({ error: "غير مصرح بالدخول" }, { status: 403 });
 
-    // 1. حذف جميع النقاط المرتبطة بهذه الغرفة لكل اللاعبين والمشرفين
+    // حذف جميع النقاط في الغرفة المحددة
     await prisma.playerRoomScore.deleteMany({
-      where: {
-        roomId: ROOM_ID,
-      },
+      where: { roomId: ROOM_ID },
     });
 
-    // 2. اختياري: حذف اللاعبين الذين ليس لديهم أي سجلات نقاط في أي غرفة أخرى (تنظيف قاعدة البيانات)
+    // تنظيف اللاعبين اليتامى
     await prisma.player.deleteMany({
-      where: {
-        roomScores: { none: {} },
-      },
+      where: { roomScores: { none: {} } },
     });
 
-    return NextResponse.json({
-      message: "تم حذف جميع النقاط في هذه الغرفة بنجاح لجميع المستخدمين",
-    });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json(
-      { error: "فشل مسح بيانات الغرفة" },
-      { status: 500 },
-    );
+    return NextResponse.json({ message: "تم الحذف بنجاح" });
+  } catch {
+    return NextResponse.json({ error: "خطأ داخلي" }, { status: 500 });
   }
 }
