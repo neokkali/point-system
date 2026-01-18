@@ -6,7 +6,7 @@ export function useWipeRoom() {
 
   return useMutation({
     mutationFn: async () => {
-      await api.delete(`/api/wipe`);
+      await api.delete(`/wipe`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players"] });

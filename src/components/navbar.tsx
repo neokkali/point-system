@@ -133,7 +133,9 @@ const Navbar = () => {
           </Link>
 
           {isOnwer && (
-            <Button onClick={() => wipeRoom()}>حذف نقاط المسابقات</Button>
+            <Button variant="ghost" onClick={() => wipeRoom()}>
+              حذف نقاط المسابقات
+            </Button>
           )}
 
           {!loading &&
