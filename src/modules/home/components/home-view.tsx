@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGlobalScores } from "@/hooks/use-global-scores";
 import { cn } from "@/lib/utils";
-import BestWpmCard from "@/modules/home/components/best-wpm-card";
 import { motion } from "framer-motion";
 import { Check, Copy, Trophy, Users } from "lucide-react";
 import Image from "next/image";
@@ -82,7 +81,7 @@ export default function HomeView() {
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-0 sm:px-4 space-y-6">
-      <BestWpmCard />
+      {/* <BestWpmCard /> */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-base md:text-2xl font-bold tracking-tight flex items-center gap-2">
           <Trophy className="w-6 h-6 text-yellow-500" />
