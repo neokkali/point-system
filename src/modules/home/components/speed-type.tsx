@@ -30,7 +30,7 @@ const normalizeArabicText = (str: string): string => {
   if (!str) return "";
   const spaceNormalized = str.replace(
     /\u00A0|\u200B|\u200C|\u200D|\u200E|\u200F/g,
-    " "
+    " ",
   );
   const removedMarks = spaceNormalized
     .normalize("NFD")
@@ -39,8 +39,8 @@ const normalizeArabicText = (str: string): string => {
   return removedMarks;
 };
 
-const GAME_DURATION = 60; // seconds
-const WORDS_PER_GAME = 60;
+const GAME_DURATION = 30; // seconds
+const WORDS_PER_GAME = 30;
 
 export default function SpeedType({
   duration = GAME_DURATION,
@@ -74,7 +74,7 @@ export default function SpeedType({
     const words = articleText.split(/\s+/).filter(Boolean);
     if (words.length <= WORDS_PER_GAME) return articleText.trim();
     const startIndex = Math.floor(
-      Math.random() * (words.length - WORDS_PER_GAME)
+      Math.random() * (words.length - WORDS_PER_GAME),
     );
     return words.slice(startIndex, startIndex + WORDS_PER_GAME).join(" ");
   }
@@ -120,7 +120,7 @@ export default function SpeedType({
 
       return { wpm, accuracy, correctChars, elapsedSeconds };
     },
-    [normalizedUserChars, graphemes, duration]
+    [normalizedUserChars, graphemes, duration],
   );
 
   // --- إنهاء اللعبة وإرسال النتائج ---
@@ -153,10 +153,10 @@ export default function SpeedType({
           onError: () => {
             submittedRef.current = false;
           },
-        }
+        },
       );
     },
-    [calculateResults, isAuthenticated, isFinished, submitScore]
+    [calculateResults, isAuthenticated, isFinished, submitScore],
   );
 
   // --- RAF-based timer ---
@@ -258,8 +258,8 @@ export default function SpeedType({
         status === "correct"
           ? "text-foreground"
           : status === "incorrect"
-          ? "text-destructive bg-destructive/10"
-          : "text-muted-foreground/50";
+            ? "text-destructive bg-destructive/10"
+            : "text-muted-foreground/50";
 
       const cursorClass = showCursor
         ? "border-r-2 border-primary/90 animate-pulse"
@@ -271,7 +271,7 @@ export default function SpeedType({
           className={cn(
             "text-xl md:text-3xl leading-relaxed transition-colors duration-75",
             colorClass,
-            cursorClass
+            cursorClass,
           )}
         >
           {cluster}
