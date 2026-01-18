@@ -272,8 +272,8 @@ export default function SuperScores({ url }: { url: string }) {
                         <Image
                           alt="supervisor top"
                           src={"/icons/crown.png"}
-                          width={24}
-                          height={24}
+                          width={34}
+                          height={34}
                           className="object-contain"
                         />
                       )}

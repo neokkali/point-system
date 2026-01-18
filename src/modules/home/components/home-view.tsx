@@ -172,8 +172,8 @@ export default function HomeView() {
                                   <Image
                                     alt="top one"
                                     src={"/icons/crown.png"}
-                                    width={19}
-                                    height={19}
+                                    width={28}
+                                    height={29}
                                     className="object-contain"
                                   />
                                 ) : (
