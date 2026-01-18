@@ -134,7 +134,7 @@ const Navbar = () => {
 
           {isOnwer && (
             <Button variant="ghost" onClick={() => wipeRoom()}>
-              حذف نقاط المسابقات
+              تنظيف
             </Button>
           )}
 
