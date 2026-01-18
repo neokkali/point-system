@@ -155,9 +155,33 @@ export default function HomeView() {
                           <div className="flex justify-between items-center text-sm mb-1.5 z-10 relative">
                             <div className="flex items-center gap-3">
                               {/* Rank Indicator */}
-                              <div
+                              <div className="flex items-center">
+                                {isFirst ? (
+                                  <Image
+                                    alt="top one"
+                                    src={"/icons/crown.png"}
+                                    width={20}
+                                    height={20}
+                                    className="object-contain"
+                                  />
+                                ) : (
+                                  <div
+                                    className={cn(
+                                      "w-5 text-center font-bold text-xs",
+                                      rank === 2
+                                        ? "text-slate-400"
+                                        : rank === 3
+                                          ? "text-amber-700"
+                                          : "text-muted-foreground",
+                                    )}
+                                  >
+                                    `#${rank}`
+                                  </div>
+                                )}
+                              </div>
+                              {/* <div
                                 className={cn(
-                                  "w-11 text-center font-bold text-xs",
+                                  "w-10 text-center font-bold text-xs",
                                   isFirst
                                     ? "text-yellow-500"
                                     : rank === 2
@@ -179,7 +203,7 @@ export default function HomeView() {
                                 ) : (
                                   `#${rank}`
                                 )}
-                              </div>
+                              </div> */}
 
                               <span
                                 className={cn(
