@@ -7,7 +7,8 @@ import { useGlobalScores } from "@/hooks/use-global-scores";
 import { cn } from "@/lib/utils";
 import BestWpmCard from "@/modules/home/components/best-wpm-card";
 import { motion } from "framer-motion";
-import { Check, Copy, Crown, Trophy, Users } from "lucide-react";
+import { Check, Copy, Trophy, Users } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { DotLoader } from "../../../components/app-loader";
 
@@ -167,7 +168,14 @@ export default function HomeView() {
                                 )}
                               >
                                 {isFirst ? (
-                                  <Crown className="w-4 h-4 inline" />
+                                  // <Crown className="w-4 h-4 inline" />
+                                  <Image
+                                    alt="top one"
+                                    src={"/icons/crown.png"}
+                                    width={15}
+                                    height={15}
+                                    className="object-contain"
+                                  />
                                 ) : (
                                   `#${rank}`
                                 )}
