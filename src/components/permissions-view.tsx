@@ -163,11 +163,7 @@ export default function PermissionsView() {
 
   return (
     <div className="max-w-4xl mx-auto mt-10 space-y-6 p-4 md:p-0">
-      {isOnwer && (
-        <Button variant="ghost" onClick={() => wipeRoom()}>
-          تنظيف
-        </Button>
-      )}
+      {isOnwer && <Button onClick={() => wipeRoom()}>تنظيف</Button>}
       <Card className="border shadow-lg dark:border-gray-800">
         <CardHeader className="flex flex-row items-center gap-3 border-b dark:border-gray-800 p-4 md:p-6">
           <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
