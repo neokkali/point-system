@@ -12,6 +12,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { DotLoader } from "./app-loader";
 import { useWipeRoom } from "@/hooks/use-wipe-room";
+import ClearRoomButtonPublic from "./clear-room-modal-public";
 
 // ------------------------
 // أنواع الأدوار
@@ -163,7 +164,7 @@ export default function PermissionsView() {
 
   return (
     <div className="max-w-4xl mx-auto mt-10 space-y-6 p-4 md:p-0">
-      {isOnwer && <Button onClick={() => wipeRoom()}>تنظيف</Button>}
+      {isOnwer && <ClearRoomButtonPublic />}
       <Card className="border shadow-lg dark:border-gray-800">
         <CardHeader className="flex flex-row items-center gap-3 border-b dark:border-gray-800 p-4 md:p-6">
           <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
