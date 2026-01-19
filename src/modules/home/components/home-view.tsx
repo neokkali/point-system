@@ -207,13 +207,15 @@ export default function HomeView() {
                                 )}
                               </div> */}
 
-                              <span
-                                className={cn(
-                                  "font-medium truncate max-w-[120px]",
-                                  isFirst && "text-primary font-bold",
-                                )}
-                              >
-                                {player.username}
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={cn(
+                                    "font-medium truncate max-w-[120px]",
+                                    isFirst && "text-primary font-bold",
+                                  )}
+                                >
+                                  {player.username}
+                                </span>
                                 {isLast && (
                                   <Image
                                     alt="top one"
@@ -223,7 +225,7 @@ export default function HomeView() {
                                     className="object-contain"
                                   />
                                 )}
-                              </span>
+                              </div>
                             </div>
 
                             <span className="font-mono text-xs font-semibold bg-secondary px-2 py-0.5 rounded text-secondary-foreground">
