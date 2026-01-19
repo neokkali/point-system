@@ -147,6 +147,9 @@ export default function HomeView() {
                     sortedPlayers.map((player, idx) => {
                       const rank = idx + 1;
                       const isFirst = rank === 1;
+                      const isLast =
+                        rank === sortedPlayers.length &&
+                        sortedPlayers.length > 1;
                       const progress = (player.totalScore / maxScore) * 100;
 
                       return (
@@ -166,7 +169,7 @@ export default function HomeView() {
                                 ) : (
                                   <div
                                     className={cn(
-                                      "w-5 text-center font-bold text-xs",
+                                      "text-center font-bold text-xs",
                                       rank === 2
                                         ? "text-slate-400"
                                         : rank === 3
@@ -211,6 +214,15 @@ export default function HomeView() {
                                 )}
                               >
                                 {player.username}
+                                {isLast && (
+                                  <Image
+                                    alt="top one"
+                                    src={"/icons/dog.gif"}
+                                    width={34}
+                                    height={34}
+                                    className="object-contain"
+                                  />
+                                )}
                               </span>
                             </div>
 
