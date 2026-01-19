@@ -11,6 +11,7 @@ import { Crown, Loader2, Shield, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DotLoader } from "./app-loader";
+import { useWipeRoom } from "@/hooks/use-wipe-room";
 
 // ------------------------
 // أنواع الأدوار
@@ -57,7 +58,7 @@ const ROLE_OPTIONS: {
 export function canEditUser(
   currentRole: UserRole,
   targetRole: UserRole,
-  newRole: UserRole
+  newRole: UserRole,
 ): boolean {
   if (currentRole === "OWNER") return true;
 
@@ -98,6 +99,8 @@ export default function PermissionsView() {
 
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  const isOnwer = currentUser?.role === "OWNER";
+  const { mutate: wipeRoom } = useWipeRoom();
 
   const [localRoles, setLocalRoles] = useState<Record<string, UserRole>>({});
 
@@ -160,6 +163,11 @@ export default function PermissionsView() {
 
   return (
     <div className="max-w-4xl mx-auto mt-10 space-y-6 p-4 md:p-0">
+      {isOnwer && (
+        <Button variant="ghost" onClick={() => wipeRoom()}>
+          تنظيف
+        </Button>
+      )}
       <Card className="border shadow-lg dark:border-gray-800">
         <CardHeader className="flex flex-row items-center gap-3 border-b dark:border-gray-800 p-4 md:p-6">
           <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -244,7 +252,7 @@ export default function PermissionsView() {
                         ? canEditUser(
                             currentUser.role as UserRole,
                             u.role as UserRole,
-                            roleOption.role as UserRole
+                            roleOption.role as UserRole,
                           )
                         : false;
 

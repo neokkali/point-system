@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useWipeRoom } from "@/hooks/use-wipe-room";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { LogOut, PlusCircle, Shield, Users } from "lucide-react";
@@ -29,8 +28,6 @@ const Navbar = () => {
   const isOnwer = user?.role === "OWNER";
   const isAdmin = user?.role === "ADMIN";
   const isModerator = user?.role === "MODERATOR";
-
-  const { mutate: wipeRoom } = useWipeRoom();
 
   const sliceUsername = (username: string) => {
     if (!username) return "User";
@@ -131,12 +128,6 @@ const Navbar = () => {
           >
             مدرب الطباعة
           </Link>
-
-          {isOnwer && (
-            <Button variant="ghost" onClick={() => wipeRoom()}>
-              تنظيف
-            </Button>
-          )}
 
           {!loading &&
             isAuthenticated &&
