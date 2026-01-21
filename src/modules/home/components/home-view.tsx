@@ -216,15 +216,15 @@ export default function HomeView() {
                                 >
                                   {player.username}
                                 </span>
-                                {isLast && (
-                                  <Image
-                                    alt="top one"
-                                    src={"/icons/dog.gif"}
-                                    width={34}
-                                    height={34}
-                                    className="object-contain"
-                                  />
-                                )}
+                                {/* {isLast && ( */}
+                                {/*   <Image */}
+                                {/*     alt="top one" */}
+                                {/*     src={"/icons/dog.gif"} */}
+                                {/*     width={34} */}
+                                {/*     height={34} */}
+                                {/*     className="object-contain" */}
+                                {/*   /> */}
+                                {/* )} */}
                               </div>
                             </div>
 
