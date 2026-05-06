@@ -22,7 +22,7 @@ import {
 import { Loader2 } from "lucide-react"; // أيقونة التحميل
 
 // أنواع الغرف المتاحة
-type RoomType = "ARTICLE" | "QUIZ";
+type RoomType = "ARTICLE" | "QUIZ" | "CULTURE" | "EVENTS";
 
 export default function CreateRoomPage() {
   // 🛡️ 1. حماية الصفحة والتحقق من الدور
@@ -99,6 +99,8 @@ export default function CreateRoomPage() {
                 <SelectContent dir="rtl">
                   <SelectItem value="ARTICLE">مقالات</SelectItem>
                   <SelectItem value="QUIZ">مسابقات</SelectItem>
+                  <SelectItem value="CULTURE">ثقافة والضاد</SelectItem>
+                  <SelectItem value="EVENTS">فعاليات</SelectItem>
                 </SelectContent>
               </Select>
             </div>

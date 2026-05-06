@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const user = await getUserFromAuth();
   try {
-    if (!user || user.role.toUpperCase() !== "ADMIN") {
+    if (!user || user.role.toUpperCase() !== "OWNER") {
       return NextResponse.json(
         { error: "غير مصرح بإنشاء غرفة" },
         { status: 403 }
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     }
 
     // التحقق من صحة الـ enum
-    if (!["ARTICLE", "QUIZ"].includes(type)) {
+    if (!["ARTICLE", "QUIZ", "CULTURE", "EVENTS"].includes(type)) {
       return NextResponse.json(
         { error: "نوع الغرفة غير صالح" },
         { status: 400 }

@@ -46,6 +46,8 @@ model GlobalScore {
 enum RoomType {
   ARTICLE
   QUIZ
+  CULTURE
+  EVENTS
 }
 
 model Room {
