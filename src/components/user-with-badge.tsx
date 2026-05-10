@@ -24,8 +24,8 @@ export default function UserBadge({
         <Image
           alt={`${role} badge`}
           src={badge}
-          width={20}
-          height={20}
+          width={12}
+          height={12}
           className="object-contain"
         />
       )}
