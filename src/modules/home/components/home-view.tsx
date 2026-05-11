@@ -75,7 +75,7 @@ export default function HomeView() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
+    <div className="max-w-7xl mx-auto px-4">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-2 mb-7">
         <div>
@@ -112,7 +112,7 @@ export default function HomeView() {
             room.players?.reduce((acc, p) => acc + p.totalScore, 0) || 0;
           const displayedPlayers = isExpanded
             ? sortedPlayers
-            : sortedPlayers.slice(0, 5);
+            : sortedPlayers.slice(0, 8);
 
           return (
             <motion.div
@@ -200,7 +200,7 @@ export default function HomeView() {
 
                         return (
                           <div key={idx} className="group">
-                            <div className="flex justify-between items-center text-sm mb-1.5">
+                            <div className="flex justify-between items-center text-sm mb-1">
                               <div className="flex items-center gap-2.5 overflow-hidden">
                                 <div className="w-5 shrink-0 flex justify-center">
                                   {rank === 1 ? (

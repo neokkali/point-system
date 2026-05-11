@@ -35,7 +35,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-900 shadow-md">
+    <nav className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-black/40 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
       {/* الشعار أو اسم النظام */}
       <div className="flex items-center gap-4">
         {/* قائمة Dropdown */}
