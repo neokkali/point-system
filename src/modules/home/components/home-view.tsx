@@ -67,7 +67,7 @@ export default function HomeView() {
     return getTopScore(b) - getTopScore(a);
   });
 
-  const getPlayerLabel = (count, isChanged = true) => {
+  const getPlayerLabel = (count: number, isChanged: boolean = true) => {
     if (count === 1) return isChanged ? "لاعب" : "متسابق";
     if (count === 2) return isChanged ? "لاعبين" : "متسابقين";
     if (count >= 3 && count <= 10) return isChanged ? "لاعبين" : "متسابقين";
