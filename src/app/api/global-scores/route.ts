@@ -18,7 +18,7 @@ type RoomData = {
 export async function GET() {
   try {
     // جلب كل الغرف مع سجل النقاط لكل لاعب
-    const rooms = await prisma.room.findMany({
+    const rooms = await prisma.room?.findMany({
       include: {
         roomScores: {
           include: {

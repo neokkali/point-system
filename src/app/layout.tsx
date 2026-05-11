@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
+import Footer from "@/components/footer";
 
 const tajawal = Tajawal({
   weight: ["200", "300", "400", "500", "700", "800", "900"],
@@ -81,7 +82,7 @@ export default function RootLayout({
               <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <main className="flex-1 p-1 lg:p-10">{children}</main>
-                <div className=""></div>
+                <Footer />
               </div>
             </AuthProvider>
           </ReactQueryProvider>

@@ -49,7 +49,7 @@ export default function Players({ roomId }: RoomPageProps) {
           id: p.id,
           username: p.username,
           points: String(p.totalScore),
-        }))
+        })),
       );
     } else {
       setNewPlayers([]);
@@ -60,7 +60,7 @@ export default function Players({ roomId }: RoomPageProps) {
   const handleChange = (
     index: number,
     field: "username" | "points",
-    value: string
+    value: string,
   ) => {
     setNewPlayers((prev) => {
       const updated = [...prev];
@@ -92,7 +92,7 @@ export default function Players({ roomId }: RoomPageProps) {
 
   const handleCopyPoints = (players: Player[]) => {
     const sortedPlayers = [...players].sort(
-      (a, b) => b.totalScore - a.totalScore
+      (a, b) => b.totalScore - a.totalScore,
     );
     if (!sortedPlayers.length) return;
     const formatted = sortedPlayers
@@ -107,7 +107,7 @@ export default function Players({ roomId }: RoomPageProps) {
 
   if (isLoading) {
     return (
-      <div className="h-[80vh] flex flex-col justify-center items-center">
+      <div className="h-[60vh] flex flex-col justify-center items-center">
         <DotLoader size="lg" text="جاري التحميل" color="primary" />
       </div>
     );

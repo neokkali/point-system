@@ -50,14 +50,14 @@ export default function HomeView() {
 
   if (isLoading)
     return (
-      <div className="h-[80vh] flex flex-col justify-center items-center">
+      <div className="h-[70vh] flex flex-col justify-center items-center">
         <DotLoader size="lg" text="جاري التحميل" color="primary" />
       </div>
     );
 
   if (error || !data)
     return (
-      <div className="h-[80vh] flex flex-col justify-center items-center text-red-500 font-bold">
+      <div className="h-[70vh] flex flex-col justify-center items-center text-red-500 font-bold">
         {error ? "حدث خطأ في جلب البيانات" : "لا توجد بيانات"}
       </div>
     );
@@ -67,14 +67,21 @@ export default function HomeView() {
     return getTopScore(b) - getTopScore(a);
   });
 
+  const getPlayerLabel = (count, isChanged = true) => {
+    if (count === 1) return isChanged ? "لاعب" : "متسابق";
+    if (count === 2) return isChanged ? "لاعبين" : "متسابقين";
+    if (count >= 3 && count <= 10) return isChanged ? "لاعبين" : "متسابقين";
+    return isChanged ? "لاعب" : "متسابق";
+  };
+
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
+    <div className="max-w-7xl mx-auto py-8 px-4">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-2 mb-7">
         <div>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3">
+          <h2 className="text-xl md:text-2xl font-extrabold tracking-tight flex items-center gap-3">
             <Trophy className="w-8 h-8 text-yellow-500 drop-shadow-sm" />
-            لوحة النقاط العالمية
+            نقاط رومات التفاعل شات فلة الخليج
           </h2>
           <p className="text-muted-foreground mt-1 text-sm">
             متابعة نتائج اللاعبين وتصدر الغرف لحظياً
@@ -153,7 +160,8 @@ export default function HomeView() {
                       <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/10 text-primary">
                         <Users className="w-3 h-3" />
                         <span className="text-[11px] font-bold">
-                          {room.players.length} لاعبين
+                          {room.players.length}{" "}
+                          {getPlayerLabel(room.players.length)}
                         </span>
                       </div>
 
@@ -201,6 +209,8 @@ export default function HomeView() {
                                       src="/icons/crown_king.gif"
                                       width={20}
                                       height={20}
+                                      className="w-5 h-auto"
+                                      unoptimized
                                     />
                                   ) : (
                                     <span className="text-[10px] font-bold text-muted-foreground/70">
@@ -208,7 +218,7 @@ export default function HomeView() {
                                     </span>
                                   )}
                                 </div>
-                                <span className="font-semibold truncate text-[15px] group-hover:text-primary transition-colors">
+                                <span className="font-semibold truncate text-[14px] group-hover:text-primary transition-colors">
                                   {player.username}
                                 </span>
                               </div>
@@ -216,7 +226,7 @@ export default function HomeView() {
                                 {player.totalScore.toLocaleString()}
                               </span>
                             </div>
-                            <div className="h-1.5 w-full bg-secondary/40 rounded-full overflow-hidden shadow-inner">
+                            <div className="h-1 w-full bg-secondary/40 rounded-full overflow-hidden shadow-inner">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
@@ -224,7 +234,7 @@ export default function HomeView() {
                                 className={cn(
                                   "h-full rounded-full transition-all",
                                   rank === 1
-                                    ? "bg-gradient-to-r from-yellow-400 to-orange-500 shadow-[0_0_8px_rgba(234,179,8,0.4)]"
+                                    ? "bg-linear-to-r from-yellow-400 to-orange-500 shadow-[0_0_8px_rgba(234,179,8,0.4)]"
                                     : "bg-primary/80",
                                 )}
                               />
@@ -236,14 +246,15 @@ export default function HomeView() {
                       {sortedPlayers.length > 5 && (
                         <Button
                           variant="secondary"
-                          className="w-full h-8 text-[11px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
+                          className="w-full h-8 text-[11px] shadow-sm"
                           onClick={() =>
                             setExpandedRoomId(isExpanded ? null : room.roomId)
                           }
                         >
                           {isExpanded
                             ? "طي القائمة"
-                            : `+ ${sortedPlayers.length - 5} متسابقين`}
+                            : `+ ${sortedPlayers.length - 5}`}{" "}
+                          {getPlayerLabel(sortedPlayers.length, false)}
                         </Button>
                       )}
                     </div>

@@ -26,7 +26,9 @@ export default function UserBadge({
           src={badge}
           width={12}
           height={12}
-          className="object-contain"
+          loading="eager"
+          className="object-contain w-3 h-auto"
+          unoptimized
         />
       )}
       <span className="text-lg font-semibold mt-1">{name}</span>
