@@ -8,7 +8,7 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
-import { Check, Copy, Loader2 } from "lucide-react";
+import { Check, Copy, Loader2, ChevronDown, ChevronsUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import ClearRoomButton from "./clear-room-button";
 
@@ -31,9 +31,9 @@ interface RoomPageProps {
 export default function Players({ roomId }: RoomPageProps) {
   useAuthGuard(["OWNER", "ADMIN", "MODERATOR"], "/auth", "/");
   const [isCopied, setIsCopied] = useState(false);
-
-  // const { user, isAuthenticated } = useAuth();
-  // const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
+  
+  // حالة التحكم في عدد اللاعبين المعروضين
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const { data: players, isLoading, error } = usePlayers(roomId);
   const deleteMutation = useDeletePlayer(roomId);
@@ -41,7 +41,6 @@ export default function Players({ roomId }: RoomPageProps) {
 
   const [newPlayers, setNewPlayers] = useState<NewPlayer[]>([]);
 
-  // تحديث اللاعبين عند جلبهم
   useEffect(() => {
     if (players && players.length) {
       setNewPlayers(
@@ -54,7 +53,6 @@ export default function Players({ roomId }: RoomPageProps) {
     } else {
       setNewPlayers([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players]);
 
   const handleChange = (
@@ -86,7 +84,6 @@ export default function Players({ roomId }: RoomPageProps) {
 
   const handleRemovePlayer = (player: { id?: string }, index: number) => {
     if (!player.id) return removeRow(index);
-
     deleteMutation.mutate(player.id, { onSuccess: () => removeRow(index) });
   };
 
@@ -132,19 +129,16 @@ export default function Players({ roomId }: RoomPageProps) {
             onClick={() => handleCopyPoints(players)}
           >
             {isCopied ? (
-              <>
-                <Check className="w-4 h-4 text-green-500" />
-              </>
+              <Check className="w-4 h-4 text-green-500" />
             ) : (
-              <>
-                <Copy className="w-4 h-4 mb-0.5" />
-              </>
+              <Copy className="w-4 h-4 mb-0.5" />
             )}
           </Button>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {newPlayers.map((p, idx) => (
+        {/* عرض اللاعبين بناءً على العدد المسموح به فقط */}
+        {newPlayers.slice(0, visibleCount).map((p, idx) => (
           <div key={p.id ?? `new-${idx}`} className="flex gap-2 items-center">
             <Input
               placeholder="اسم اللاعب"
@@ -170,6 +164,32 @@ export default function Players({ roomId }: RoomPageProps) {
         ))}
 
         <div className="flex flex-col gap-2 w-full">
+          {/* أزرار التحكم في العرض تظهر فقط إذا كان هناك أكثر من 10 لاعبين */}
+          {newPlayers.length > 10 && (
+            <div className="flex gap-2 w-full mb-1">
+              {visibleCount < newPlayers.length && (
+                <Button
+                  variant="outline"
+                  className="flex-1 text-xs"
+                  onClick={() => setVisibleCount((prev) => prev + 10)}
+                >
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                  عرض 10 إضافيين
+                </Button>
+              )}
+              {visibleCount > 10 && (
+                <Button
+                  variant="outline"
+                  className="flex-1 text-xs text-orange-500"
+                  onClick={() => setVisibleCount(10)}
+                >
+                  <ChevronsUp className="w-4 h-4 ml-1" />
+                  إخفاء الكل (العودة لـ 10)
+                </Button>
+              )}
+            </div>
+          )}
+
           <Button
             onClick={addNewRow}
             className="w-full"
@@ -186,7 +206,7 @@ export default function Players({ roomId }: RoomPageProps) {
             {updateMutation.isPending ? (
               <>
                 جاري حفظ التغييرات
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
               </>
             ) : (
               <>حفظ التغييرات</>

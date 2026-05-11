@@ -135,7 +135,7 @@ const Navbar = () => {
               <Link
                 href="/rooms"
                 className={cn(
-                  "text-base md:text-lg",
+                  "text-base md:text-lg text-transparent bg-clip-text bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 font-bold",
                   isRooms ? "font-bold" : "font-normal",
                 )}
               >
