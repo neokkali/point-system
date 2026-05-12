@@ -41,7 +41,7 @@ export const GlobalRoomSummary = () => {
                 <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                   <LayoutGrid className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-sm truncate max-w-30">
+                <h3 className="font-bold text-[10px] sm:text-sm truncate max-w-30">
                   {room.roomName}
                 </h3>
               </div>

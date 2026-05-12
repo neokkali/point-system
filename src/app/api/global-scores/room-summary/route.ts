@@ -3,13 +3,17 @@ import { prisma } from "@/lib/priams";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  // 1. التحقق من الهوية (Security)
+  // نظام Vercel Cron يرسل التوكين تلقائياً في الـ Headers
   const authHeader = request.headers.get("authorization");
+  console.log("الخام القادم من Header:", authHeader);
+  console.log("المتغير المحمل في السيرفر:", process.env.CRON_SECRET);
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("غير مصرح لك بالدخول", { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
+
   try {
-    // 1. استخدام groupBy لجعل قاعدة البيانات تحسب المجموع (Optimized)
-    // هذا أسرع بكثير لأنه يقلل من حجم البيانات المنقولة من DB إلى الـ API
+    // 2. تجميع النقاط من جدول النقاط
     const roomAggregates = await prisma.playerRoomScore.groupBy({
       by: ["roomId"],
       _sum: {
@@ -17,11 +21,18 @@ export async function GET(request: Request) {
       },
     });
 
-    // 2. تحديث جدول RoomSummary بشكل تراكمي
+    // إذا لم تكن هناك نقاط جديدة، ننهي العملية بنجاح
+    if (roomAggregates.length === 0) {
+      return NextResponse.json({
+        message: "No points to aggregate this week.",
+      });
+    }
+
+    // 3. التحديث التراكمي في جدول RoomSummary
     const updatePromises = roomAggregates.map(async (aggregate) => {
       const newPoints = aggregate._sum.totalScore || 0;
 
-      // جلب اسم الغرفة (اختياري لضمان دقة البيانات)
+      // جلب اسم الغرفة لضمان ظهوره بشكل صحيح في الـ Card
       const room = await prisma.room.findUnique({
         where: { id: aggregate.roomId },
         select: { name: true },
@@ -30,7 +41,7 @@ export async function GET(request: Request) {
       return prisma.roomSummary.upsert({
         where: { roomId: aggregate.roomId },
         update: {
-          // التراكم: إضافة النقاط الجديدة للموجودة مسبقاً باستخدام increment
+          // هنا السحر: increment تضيف النقاط الجديدة للقديمة دون مسحها
           totalPoints: {
             increment: newPoints,
           },
@@ -47,10 +58,13 @@ export async function GET(request: Request) {
     await Promise.all(updatePromises);
 
     return NextResponse.json({
-      message: "تم تحديث النقاط بنجاح (إضافة تراكمية)",
+      message: "Success: Weekly points merged into global summary.",
     });
   } catch (err) {
     console.error("Aggregation Error:", err);
-    return NextResponse.json({ error: "فشل تحديث البيانات" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
