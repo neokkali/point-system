@@ -31,12 +31,28 @@ export async function POST(
     // تنظيف البيانات + إزالة التكرار
     const mergedPlayers = new Map<string, number>();
 
+    const isOnlyWhitespace = (str: string) => /^[\s\u00A0\t\r\n]*$/.test(str);
+    const hasContent = (str: string) => /[^\s\u00A0\t\r\n]/.test(str);
+
     for (const p of players) {
-      if (!p.username) continue;
+      if (typeof p.username !== "string") continue;
 
-      const old = mergedPlayers.get(p.username) || 0;
+      let cleanUsername = p.username;
 
-      mergedPlayers.set(p.username, old + (p.points || 0));
+      if (hasContent(cleanUsername)) {
+        cleanUsername = cleanUsername
+          .normalize("NFKC")
+          .replace(/[\u00A0\t\r\n]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      } else if (isOnlyWhitespace(cleanUsername)) {
+        // لا تعديل إطلاقًا
+        cleanUsername = p.username;
+      }
+
+      const old = mergedPlayers.get(cleanUsername) || 0;
+
+      mergedPlayers.set(cleanUsername, old + (p.points || 0));
     }
 
     const usernames = [...mergedPlayers.keys()];

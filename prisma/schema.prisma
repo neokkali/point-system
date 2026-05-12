@@ -67,8 +67,8 @@ model Player {
   roomScores PlayerRoomScore[]
 
   // تمت إزالة unique هنا
-  @@unique([username, userId])
   @@index([userId])
+  @@unique([username, userId])
 }
 
 // ------------------ 4. سجل النقاط لكل غرفة ------------------
