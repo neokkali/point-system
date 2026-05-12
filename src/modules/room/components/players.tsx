@@ -8,7 +8,14 @@ import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useDeletePlayer } from "@/hooks/use-delete-player";
 import { usePlayers } from "@/hooks/use-players";
 import { useUpdatePlayers } from "@/hooks/use-update-players";
-import { Check, Copy, Loader2, ChevronDown, ChevronsUp } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Loader2,
+  ChevronDown,
+  ChevronsUp,
+  Eye,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import ClearRoomButton from "./clear-room-button";
 
@@ -31,7 +38,7 @@ interface RoomPageProps {
 export default function Players({ roomId }: RoomPageProps) {
   useAuthGuard(["OWNER", "ADMIN", "MODERATOR"], "/auth", "/");
   const [isCopied, setIsCopied] = useState(false);
-  
+
   // حالة التحكم في عدد اللاعبين المعروضين
   const [visibleCount, setVisibleCount] = useState(10);
 
@@ -67,8 +74,17 @@ export default function Players({ roomId }: RoomPageProps) {
     });
   };
 
-  const addNewRow = () =>
-    setNewPlayers((prev) => [...prev, { username: "", points: "" }]);
+  // تعديل: إضافة لاعب وزيادة العداد ليظهر الصف الجديد فوراً
+  const addNewRow = () => {
+    setNewPlayers((prev) => {
+      const updated = [...prev, { username: "", points: "" }];
+      // إذا كان اللاعب الجديد خارج نطاق العرض الحالي، نزيد العرض ليظهر
+      if (updated.length > visibleCount) {
+        setVisibleCount(updated.length);
+      }
+      return updated;
+    });
+  };
 
   const removeRow = (index: number) =>
     setNewPlayers((prev) => prev.filter((_, i) => i !== index));
@@ -119,9 +135,9 @@ export default function Players({ roomId }: RoomPageProps) {
 
   return (
     <Card className="max-w-3xl mx-auto mt-6">
-      <CardHeader className="flex items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>إدارة اللاعبين للغرفة</CardTitle>
-        {players.length > 0 && (
+        {players && players.length > 0 && (
           <Button
             variant="ghost"
             size="icon"
@@ -137,7 +153,7 @@ export default function Players({ roomId }: RoomPageProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* عرض اللاعبين بناءً على العدد المسموح به فقط */}
+        {/* عرض اللاعبين بناءً على العدد المسموح به */}
         {newPlayers.slice(0, visibleCount).map((p, idx) => (
           <div key={p.id ?? `new-${idx}`} className="flex gap-2 items-center">
             <Input
@@ -164,27 +180,37 @@ export default function Players({ roomId }: RoomPageProps) {
         ))}
 
         <div className="flex flex-col gap-2 w-full">
-          {/* أزرار التحكم في العرض تظهر فقط إذا كان هناك أكثر من 10 لاعبين */}
+          {/* أزرار التحكم في العرض */}
           {newPlayers.length > 10 && (
-            <div className="flex gap-2 w-full mb-1">
+            <div className="flex flex-row gap-2 w-full mb-1">
               {visibleCount < newPlayers.length && (
-                <Button
-                  variant="outline"
-                  className="flex-1 text-xs"
-                  onClick={() => setVisibleCount((prev) => prev + 10)}
-                >
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                  عرض 10 إضافيين
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-[10px] md:text-xs h-8 px-1"
+                    onClick={() => setVisibleCount((prev) => prev + 10)}
+                  >
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                    عرض 10
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-[10px] md:text-xs h-8 px-1"
+                    onClick={() => setVisibleCount(newPlayers.length)}
+                  >
+                    <Eye className="w-3 h-3 ml-1" />
+                    عرض الكل
+                  </Button>
+                </>
               )}
               {visibleCount > 10 && (
                 <Button
                   variant="outline"
-                  className="flex-1 text-xs text-orange-500"
+                  className="flex-1 text-[10px] md:text-xs h-8 px-1 text-orange-500 hover:text-orange-600"
                   onClick={() => setVisibleCount(10)}
                 >
-                  <ChevronsUp className="w-4 h-4 ml-1" />
-                  إخفاء الكل (العودة لـ 10)
+                  <ChevronsUp className="w-3 h-3 ml-1" />
+                  إخفاء
                 </Button>
               )}
             </div>
@@ -212,7 +238,7 @@ export default function Players({ roomId }: RoomPageProps) {
               <>حفظ التغييرات</>
             )}
           </Button>
-          {players.length > 2 && (
+          {players && players.length > 2 && (
             <ClearRoomButton
               roomId={roomId}
               disabled={updateMutation.isPending}
