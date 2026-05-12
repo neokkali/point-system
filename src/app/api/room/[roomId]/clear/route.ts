@@ -7,7 +7,7 @@ const allowedRoles = ["OWNER", "ADMIN", "MODERATOR"];
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ roomId: string }> }
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   const user = await getUserFromAuth();
   if (!user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
@@ -18,27 +18,33 @@ export async function DELETE(
   const { roomId } = await params;
 
   try {
-    // حذف جميع نقاط اللاعبين الذين ينتمون لهذا المشرف فقط في الغرفة
-    await prisma.playerRoomScore.deleteMany({
-      where: {
-        roomId,
-        player: { userId: user.userId },
-      },
-    });
+    // استخدام الترانزاكشن لضمان السرعة والتكامل
+    await prisma.$transaction(async (tx) => {
+      // 1. حذف النقاط الخاصة بلاعبي هذا المشرف في هذه الغرفة
+      await tx.playerRoomScore.deleteMany({
+        where: {
+          roomId: roomId,
+          player: { userId: user.userId },
+        },
+      });
 
-    // حذف أي لاعب لهذا المشرف لم يعد مرتبط بأي غرفة
-    await prisma.player.deleteMany({
-      where: {
-        userId: user.userId,
-        roomScores: { none: {} },
-      },
+      // 2. حذف اللاعبين الذين ليس لديهم أي نقاط في أي غرفة (Cleanup)
+      // هذا الاستعلام سيحذف فقط من ينتمون لهذا المستخدم ولا يملكون أي سجلات نقاط
+      await tx.player.deleteMany({
+        where: {
+          userId: user.userId,
+          roomScores: {
+            none: {},
+          },
+        },
+      });
     });
 
     return NextResponse.json({
-      message: "تم تنظيف جميع لاعبيك في هذه الغرفة بنجاح",
+      message: "تم تنظيف بيانات لاعبيك بنجاح",
     });
   } catch (err) {
-    console.error(err);
+    console.error("Delete Error:", err);
     return NextResponse.json({ error: "فشل تنظيف اللاعبين" }, { status: 500 });
   }
 }
