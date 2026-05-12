@@ -80,7 +80,7 @@ export default function HomeView() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-2 mb-7">
         <div>
-          <h2 className="text-xl md:text-2xl font-extrabold tracking-tight flex items-center gap-3">
+          <h2 className="text-lg md:text-2xl font-extrabold tracking-tight flex items-center gap-3">
             <Trophy className="w-8 h-8 text-yellow-500 drop-shadow-sm" />
             نقاط رومات التفاعل شات فلة الخليج
           </h2>

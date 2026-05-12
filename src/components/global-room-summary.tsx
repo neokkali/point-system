@@ -70,7 +70,7 @@ export const GlobalRoomSummary = () => {
 
               <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground/60 font-mono italic">
                 <Fingerprint className="w-2.5 h-2.5" />
-                <span>ID: {room.roomId.split("-")[0]}...</span>
+                <span>ID: {room.roomId}...</span>
               </div>
             </div>
           </CardContent>
