@@ -19,20 +19,26 @@ export async function POST(
   const { players }: { players: { username: string; points: number }[] } = body;
 
   try {
-    // 1. تجميع النقاط برمجياً قبل دخول قاعدة البيانات (لتقليل العمليات)
-    const sanitizedMap = new Map<string, number>();
-    players.forEach((p) => {
-      const name = p.username.trim() || p.username;
-      sanitizedMap.set(
-        name,
-        (sanitizedMap.get(name) || 0) + Math.floor(p.points),
-      );
-    });
+    // 1. تجميع النقاط في الذاكرة مع منطق معالجة الأسماء الجديد
+    const pointsMap = new Map<string, number>();
 
-    const uniqueUsernames = Array.from(sanitizedMap.keys());
+    for (const p of players) {
+      let processedName = p.username;
 
-    // 2. خطوة سريعة: إنشاء كل اللاعبين غير الموجودين دفعة واحدة
-    // هذه العملية تتجاهل الموجود مسبقاً وتنشئ الجديد فقط بطلقة واحدة
+      // 🟢 التحسين المطلوب:
+      // إذا كان الاسم يحتوي على أي حرف أو رقم (بعد حذف المسافات لا يزال هناك محتوى)
+      if (p.username.trim().length > 0) {
+        processedName = p.username.trim(); // نزيل المسافات من الطرفين (أو أي منطق تريده للمسافات)
+      }
+      // أما إذا كان الاسم "مسافات فقط"، فسيتم تجاهل الـ trim وسيبقى كما هو (processedName = p.username)
+
+      const currentPoints = pointsMap.get(processedName) || 0;
+      pointsMap.set(processedName, currentPoints + Math.floor(p.points));
+    }
+
+    const uniqueUsernames = Array.from(pointsMap.keys());
+
+    // --- [تحسين 1]: إنشاء مجمع للاعبين الجدد ---
     await prisma.player.createMany({
       data: uniqueUsernames.map((uname) => ({
         username: uname,
@@ -41,7 +47,7 @@ export async function POST(
       skipDuplicates: true,
     });
 
-    // 3. جلب بيانات اللاعبين (الـ IDs) دفعة واحدة
+    // --- [تحسين 2]: جلب الـ IDs ---
     const dbPlayers = await prisma.player.findMany({
       where: {
         username: { in: uniqueUsernames },
@@ -50,10 +56,9 @@ export async function POST(
       select: { id: true, username: true },
     });
 
-    // 4. تنفيذ الـ Upsert لجميع اللاعبين في Transaction واحد (سرعة هائلة)
-    // بدلاً من انتظار كل لاعب على حدة، نرسلهم جميعاً كـ Transaction
+    // --- [تحسين 3]: تنفيذ الـ Transaction ---
     const operations = dbPlayers.map((player) => {
-      const points = sanitizedMap.get(player.username) || 0;
+      const pointsToAdd = pointsMap.get(player.username) || 0;
       return prisma.playerRoomScore.upsert({
         where: {
           playerId_roomId: {
@@ -62,20 +67,20 @@ export async function POST(
           },
         },
         update: {
-          totalScore: { increment: points },
+          totalScore: { increment: pointsToAdd },
           updatedAt: new Date(),
         },
         create: {
           playerId: player.id,
           roomId: roomId,
-          totalScore: points,
+          totalScore: pointsToAdd,
         },
       });
     });
 
     await prisma.$transaction(operations);
 
-    return NextResponse.json({ message: "تمت العملية بسرعة فائقة" });
+    return NextResponse.json({ message: "تم التحسين والمعالجة بنجاح" });
   } catch (err) {
     console.error("DB Error:", err);
     return NextResponse.json({ error: "فشل تحديث البيانات" }, { status: 500 });
