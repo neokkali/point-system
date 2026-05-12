@@ -67,6 +67,7 @@ model Player {
   roomScores PlayerRoomScore[]
 
   // تمت إزالة unique هنا
+  @@unique([username, userId])
   @@index([userId])
 }
 
