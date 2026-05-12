@@ -67,22 +67,29 @@ export async function POST(
     // 3. تحديث النقاط داخل Transaction واحد
     // هذا الجزء هو الذي يوفر 90% من الوقت مقارنة بالـ Promise.all العادي
     // --- المرحلة 3 (المحسنة جداً): تحديث النقاط باستعلام واحد خام ---
+    // --- المرحلة 3 (المؤمنة ضد أخطاء 500 والتضارب) ---
     if (uniquePlayers.length > 0) {
-      const values = uniquePlayers
+      // 1. تصفية اللاعبين: نأخذ فقط من نجد له ID حقيقي في الخريطة
+      const validEntries = uniquePlayers
         .map((p) => {
           const playerId = playerMap.get(p.username);
-          return `('${playerId}', '${roomId}', ${p.points})`;
+          return playerId ? `('${playerId}', '${roomId}', ${p.points})` : null;
         })
-        .join(", ");
+        .filter((entry): entry is string => entry !== null);
 
-      // تنفيذ استعلام واحد فقط لجميع اللاعبين دفعة واحدة
-      // ملاحظة: تأكد أن اسم الجدول مطابق لما في قاعدة البيانات (غالباً "PlayerRoomScore")
-      await prisma.$executeRawUnsafe(`
-        INSERT INTO "PlayerRoomScore" ("playerId", "roomId", "totalScore")
-        VALUES ${values}
-        ON CONFLICT ("playerId", "roomId") 
-        DO UPDATE SET "totalScore" = "PlayerRoomScore"."totalScore" + EXCLUDED."totalScore";
-      `);
+      // 2. التنفيذ فقط إذا كانت هناك بيانات صالحة
+      if (validEntries.length > 0) {
+        const values = validEntries.join(", ");
+
+        await prisma.$executeRawUnsafe(`
+          INSERT INTO "PlayerRoomScore" ("playerId", "roomId", "totalScore", "updatedAt")
+          VALUES ${values}
+          ON CONFLICT ("playerId", "roomId") 
+          DO UPDATE SET 
+            "totalScore" = "PlayerRoomScore"."totalScore" + EXCLUDED."totalScore",
+            "updatedAt" = CURRENT_TIMESTAMP;
+        `);
+      }
     }
 
     return NextResponse.json({ message: "تمت المعالجة بنجاح وسرعة فائقة" });
