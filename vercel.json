@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/room/clear",
-      "schedule": "0 19 * * 4"
+      "path": "/api/global-scores/room-summary",
+      "schedule": "0 0 * * 4"
     }
   ]
 }
