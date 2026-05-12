@@ -19,76 +19,65 @@ export async function POST(
   const { players }: { players: { username: string; points: number }[] } = body;
 
   try {
-    // --- المرحلة 1: معالجة الأسماء وتجميع النقاط ---
+    // 1. تجميع النقاط برمجياً قبل دخول قاعدة البيانات (لتقليل العمليات)
     const sanitizedMap = new Map<string, number>();
-
     players.forEach((p) => {
-      const nameHasContent = p.username.trim().length > 0;
-      const processedName = nameHasContent ? p.username.trim() : p.username;
-
-      const currentPoints = sanitizedMap.get(processedName) || 0;
-      // نضمن أن الرقم صحيح Integer قبل أي عملية
+      const name = p.username.trim() || p.username;
       sanitizedMap.set(
-        processedName,
-        currentPoints + Math.floor(Number(p.points)),
+        name,
+        (sanitizedMap.get(name) || 0) + Math.floor(p.points),
       );
     });
 
-    const uniquePlayers = Array.from(sanitizedMap.entries()).map(
-      ([username, points]) => ({ username, points }),
-    );
+    const uniqueUsernames = Array.from(sanitizedMap.keys());
 
-    const usernames = uniquePlayers.map((p) => p.username);
-
-    // --- المرحلة 2: العمليات المجمعة ---
+    // 2. خطوة سريعة: إنشاء كل اللاعبين غير الموجودين دفعة واحدة
+    // هذه العملية تتجاهل الموجود مسبقاً وتنشئ الجديد فقط بطلقة واحدة
     await prisma.player.createMany({
-      data: usernames.map((uname) => ({
+      data: uniqueUsernames.map((uname) => ({
         username: uname,
         userId: finalUserId,
       })),
       skipDuplicates: true,
     });
 
+    // 3. جلب بيانات اللاعبين (الـ IDs) دفعة واحدة
     const dbPlayers = await prisma.player.findMany({
       where: {
-        username: { in: usernames },
+        username: { in: uniqueUsernames },
         userId: finalUserId,
       },
       select: { id: true, username: true },
     });
 
-    const playerMap = new Map(dbPlayers.map((p) => [p.username, p.id]));
+    // 4. تنفيذ الـ Upsert لجميع اللاعبين في Transaction واحد (سرعة هائلة)
+    // بدلاً من انتظار كل لاعب على حدة، نرسلهم جميعاً كـ Transaction
+    const operations = dbPlayers.map((player) => {
+      const points = sanitizedMap.get(player.username) || 0;
+      return prisma.playerRoomScore.upsert({
+        where: {
+          playerId_roomId: {
+            playerId: player.id,
+            roomId: roomId,
+          },
+        },
+        update: {
+          totalScore: { increment: points },
+          updatedAt: new Date(),
+        },
+        create: {
+          playerId: player.id,
+          roomId: roomId,
+          totalScore: points,
+        },
+      });
+    });
 
-    // --- المرحلة 3: التحديث المجمع (استعلام واحد فقط وبدون تكرار) ---
-    if (uniquePlayers.length > 0) {
-      const validEntries = uniquePlayers
-        .map((p) => {
-          const playerId = playerMap.get(p.username);
-          return playerId ? `('${playerId}', '${roomId}', ${p.points})` : null;
-        })
-        .filter((entry): entry is string => entry !== null);
+    await prisma.$transaction(operations);
 
-      if (validEntries.length > 0) {
-        const values = validEntries.join(", ");
-
-        // تنفيذ الاستعلام مرة واحدة فقط!
-        await prisma.$executeRawUnsafe(`
-          INSERT INTO "PlayerRoomScore" ("playerId", "roomId", "totalScore", "updatedAt")
-          VALUES ${values}
-          ON CONFLICT ("playerId", "roomId") 
-          DO UPDATE SET 
-            "totalScore" = "PlayerRoomScore"."totalScore" + EXCLUDED."totalScore",
-            "updatedAt" = CURRENT_TIMESTAMP;
-        `);
-      }
-    }
-
-    return NextResponse.json({ message: "Success" });
+    return NextResponse.json({ message: "تمت العملية بسرعة فائقة" });
   } catch (err) {
     console.error("DB Error:", err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "فشل تحديث البيانات" }, { status: 500 });
   }
 }
