@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/global-scores/room-summary",
-      "schedule": "0 0 * * 4"
+      "schedule": "0 9 * * 4"
     }
   ]
 }
