@@ -67,6 +67,7 @@ model Player {
   roomScores PlayerRoomScore[]
 
   // تمت إزالة unique هنا
+  @@index([userId])
 }
 
 // ------------------ 4. سجل النقاط لكل غرفة ------------------
@@ -84,6 +85,7 @@ model PlayerRoomScore {
   // 📌 هذا الشرط الجديد يضمن ما يلي:
   // لا يمكن لنفس المشرف أن يضيف نفس الاسم في نفس الغرفة
   @@unique([playerId, roomId])
+  @@index([roomId])
 }
 
 model RoomSummary {

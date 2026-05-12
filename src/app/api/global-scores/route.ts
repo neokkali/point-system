@@ -2,27 +2,36 @@
 import { prisma } from "@/lib/priams";
 import { NextResponse } from "next/server";
 
-type PlayerData = {
-  id?: string; // يمكن ترك id اختياري لأنه سيتم دمج اللاعبين بنفس الاسم
-  username: string;
-  totalScore: number;
-};
-
-type RoomData = {
-  roomId: string;
-  roomName: string;
-  roomType: string;
-  players: PlayerData[];
-};
+// type PlayerData = {
+//   id?: string; // يمكن ترك id اختياري لأنه سيتم دمج اللاعبين بنفس الاسم
+//   username: string;
+//   totalScore: number;
+// };
+//
+// type RoomData = {
+//   roomId: string;
+//   roomName: string;
+//   roomType: string;
+//   players: PlayerData[];
+// };
 
 export async function GET() {
   try {
-    // جلب كل الغرف مع سجل النقاط لكل لاعب
-    const rooms = await prisma.room?.findMany({
-      include: {
+    // 1. جلب البيانات المطلوبة فقط (Selective Selection)
+    // نستخدم select بدلاً من include لتقليل حجم البيانات القادمة من DB
+    const rooms = await prisma.room.findMany({
+      select: {
+        id: true,
+        name: true,
+        type: true,
         roomScores: {
-          include: {
-            player: true,
+          select: {
+            totalScore: true,
+            player: {
+              select: {
+                username: true,
+              },
+            },
           },
         },
       },
@@ -31,20 +40,23 @@ export async function GET() {
       },
     });
 
-    const result: RoomData[] = rooms.map((room) => {
-      // دمج اللاعبين الذين لديهم نفس الاسم داخل نفس الغرفة
-      const merged: Record<string, number> = {};
+    const result = rooms.map((room) => {
+      // 2. استخدام Map بدلاً من Object للدمج (أسرع في المعالجة)
+      const merged = new Map<string, number>();
 
       room.roomScores.forEach((score) => {
-        const name = score.player.username.trim();
-        const points = score.totalScore || 0;
+        // تطبيق منطق المسافات الخاص بك:
+        // إذا كان الاسم يحتوي محتوى، يتم عمل trim، وإلا يترك كما هو
+        const rawName = score.player.username;
+        const nameHasContent = rawName.trim().length > 0;
+        const processedName = nameHasContent ? rawName.trim() : rawName;
 
-        if (!merged[name]) merged[name] = 0;
-        merged[name] += points;
+        const currentPoints = merged.get(processedName) || 0;
+        merged.set(processedName, currentPoints + (score.totalScore || 0));
       });
 
-      // تحويل الكائن إلى مصفوفة مرتبة حسب النقاط
-      const players: PlayerData[] = Object.entries(merged)
+      // 3. تحويل الـ Map لمصفوفة مرتبة
+      const players = Array.from(merged.entries())
         .map(([username, totalScore]) => ({
           username,
           totalScore,
@@ -59,14 +71,10 @@ export async function GET() {
       };
     });
 
-    return new NextResponse(JSON.stringify(result), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-      },
-    });
+    // استخدام NextResponse.json بدلاً من JSON.stringify اليدوي (أكثر كفاءة)
+    return NextResponse.json(result);
   } catch (err) {
-    console.error(err);
+    console.error("Fetch Points Error:", err);
     return NextResponse.json({ error: "فشل جلب النقاط" }, { status: 500 });
   }
 }
