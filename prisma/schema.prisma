@@ -15,8 +15,6 @@ enum Role {
   USER
 }
 
-
-
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
@@ -26,21 +24,19 @@ model User {
 
   globalScore GlobalScore?
 
-  players   Player[]
+  players Player[]
 }
 
 model GlobalScore {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  totalScore Int     @default(0)
-  wpm       Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  totalScore Int      @default(0)
+  wpm        Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
-
-
 
 // ------------------ 2. الغرف ------------------
 enum RoomType {
@@ -66,7 +62,7 @@ model Player {
   createdAt DateTime @default(now())
 
   userId String
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   roomScores PlayerRoomScore[]
 
@@ -75,12 +71,12 @@ model Player {
 
 // ------------------ 4. سجل النقاط لكل غرفة ------------------
 model PlayerRoomScore {
-  id          String   @id @default(uuid())
-  playerId    String
-  roomId      String
-  totalScore  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  playerId   String
+  roomId     String
+  totalScore Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   player Player @relation(fields: [playerId], references: [id])
   room   Room   @relation(fields: [roomId], references: [id])
@@ -88,4 +84,12 @@ model PlayerRoomScore {
   // 📌 هذا الشرط الجديد يضمن ما يلي:
   // لا يمكن لنفس المشرف أن يضيف نفس الاسم في نفس الغرفة
   @@unique([playerId, roomId])
+}
+
+model RoomSummary {
+  id          String   @id @default(uuid())
+  roomId      String   @unique
+  roomName    String
+  totalPoints Int      @default(0)
+  updatedAt   DateTime @updatedAt
 }

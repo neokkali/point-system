@@ -9,6 +9,7 @@ import { Check, Copy, Trophy, Users, Star, Fingerprint } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { DotLoader } from "../../../components/app-loader";
+import { GlobalRoomSummary } from "@/components/global-room-summary";
 
 // ---------------------- Types ----------------------
 type Player = {
@@ -97,6 +98,10 @@ export default function HomeView() {
           </span>
         </div>
       </div>
+      <div className="">
+      <GlobalRoomSummary />
+      </div>
+
 
       {/* Grid Container */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
