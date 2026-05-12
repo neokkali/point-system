@@ -7,82 +7,104 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ roomId: string }> },
 ) {
-  const { roomId } = await params;
-  const botAuthToken = req.headers.get("x-bot-secret");
-  const body = await req.json();
-
-  if (botAuthToken !== SECRET_KEY) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const finalUserId = body.adminUserId;
-  const { players }: { players: { username: string; points: number }[] } = body;
-
   try {
-    // 1. تجميع النقاط في الذاكرة مع منطق معالجة الأسماء الجديد
-    const pointsMap = new Map<string, number>();
+    const { roomId } = await params;
 
-    for (const p of players) {
-      let processedName = p.username;
+    const botAuthToken = req.headers.get("x-bot-secret");
 
-      // 🟢 التحسين المطلوب:
-      // إذا كان الاسم يحتوي على أي حرف أو رقم (بعد حذف المسافات لا يزال هناك محتوى)
-      if (p.username.trim().length > 0) {
-        processedName = p.username.trim(); // نزيل المسافات من الطرفين (أو أي منطق تريده للمسافات)
-      }
-      // أما إذا كان الاسم "مسافات فقط"، فسيتم تجاهل الـ trim وسيبقى كما هو (processedName = p.username)
-
-      const currentPoints = pointsMap.get(processedName) || 0;
-      pointsMap.set(processedName, currentPoints + Math.floor(p.points));
+    if (botAuthToken !== SECRET_KEY) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const uniqueUsernames = Array.from(pointsMap.keys());
+    const body = await req.json();
 
-    // --- [تحسين 1]: إنشاء مجمع للاعبين الجدد ---
+    const finalUserId = body.adminUserId;
+
+    const players: { username: string; points: number }[] = body.players;
+
+    if (!players?.length) {
+      return NextResponse.json({
+        message: "No players",
+      });
+    }
+
+    // تنظيف البيانات + إزالة التكرار
+    const mergedPlayers = new Map<string, number>();
+
+    for (const p of players) {
+      if (!p.username) continue;
+
+      const old = mergedPlayers.get(p.username) || 0;
+
+      mergedPlayers.set(p.username, old + (p.points || 0));
+    }
+
+    const usernames = [...mergedPlayers.keys()];
+
+    // إنشاء اللاعبين غير الموجودين دفعة واحدة
     await prisma.player.createMany({
-      data: uniqueUsernames.map((uname) => ({
-        username: uname,
+      data: usernames.map((username) => ({
+        username,
         userId: finalUserId,
       })),
       skipDuplicates: true,
     });
 
-    // --- [تحسين 2]: جلب الـ IDs ---
+    // جلب كل اللاعبين دفعة واحدة
     const dbPlayers = await prisma.player.findMany({
       where: {
-        username: { in: uniqueUsernames },
         userId: finalUserId,
+        username: {
+          in: usernames,
+        },
       },
-      select: { id: true, username: true },
+      select: {
+        id: true,
+        username: true,
+      },
     });
 
-    // --- [تحسين 3]: تنفيذ الـ Transaction ---
-    const operations = dbPlayers.map((player) => {
-      const pointsToAdd = pointsMap.get(player.username) || 0;
-      return prisma.playerRoomScore.upsert({
-        where: {
-          playerId_roomId: {
-            playerId: player.id,
-            roomId: roomId,
+    const playerMap = new Map(dbPlayers.map((p) => [p.username, p.id]));
+
+    // تجهيز العمليات دفعة واحدة
+    const operations = [];
+
+    for (const [username, points] of mergedPlayers.entries()) {
+      const playerId = playerMap.get(username);
+
+      if (!playerId) continue;
+
+      operations.push(
+        prisma.playerRoomScore.upsert({
+          where: {
+            playerId_roomId: {
+              playerId,
+              roomId,
+            },
           },
-        },
-        update: {
-          totalScore: { increment: pointsToAdd },
-          updatedAt: new Date(),
-        },
-        create: {
-          playerId: player.id,
-          roomId: roomId,
-          totalScore: pointsToAdd,
-        },
-      });
-    });
+          update: {
+            totalScore: {
+              increment: points,
+            },
+          },
+          create: {
+            playerId,
+            roomId,
+            totalScore: points,
+          },
+        }),
+      );
+    }
 
+    // تنفيذ جماعي داخل transaction
     await prisma.$transaction(operations);
 
-    return NextResponse.json({ message: "تم التحسين والمعالجة بنجاح" });
+    return NextResponse.json({
+      message: "تمت العملية بنجاح",
+    });
   } catch (err) {
     console.error("DB Error:", err);
+
     return NextResponse.json({ error: "فشل تحديث البيانات" }, { status: 500 });
   }
 }
