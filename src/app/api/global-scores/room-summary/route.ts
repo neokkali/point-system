@@ -2,7 +2,11 @@
 import { prisma } from "@/lib/priams";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response("غير مصرح لك بالدخول", { status: 401 });
+  }
   try {
     // 1. استخدام groupBy لجعل قاعدة البيانات تحسب المجموع (Optimized)
     // هذا أسرع بكثير لأنه يقلل من حجم البيانات المنقولة من DB إلى الـ API
